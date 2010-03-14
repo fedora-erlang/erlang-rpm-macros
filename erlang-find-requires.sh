@@ -5,6 +5,8 @@
 
 filelist=`sed "s/['\"]/\\\&/g"`
 
+# Use ordinary find-requires first.
+echo $filelist | tr [:blank:] '\n' | /usr/lib/rpm/find-requires
 
 # Get the list of *.app files
 appfiles=$(echo $filelist | tr [:blank:] '\n' | grep '/ebin/' | grep '\.app$')
