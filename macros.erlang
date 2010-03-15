@@ -1,0 +1,4 @@
+# handy macros for erlang-related packages
+
+%_erldir	%{_libdir}/erlang
+%_erllibdir	%{_erldir}/lib

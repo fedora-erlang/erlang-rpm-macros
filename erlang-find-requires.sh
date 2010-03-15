@@ -20,12 +20,11 @@ done
 
 # TODO
 # Get include_lib directives
-#erlfiles=$(echo $filelist | tr [:blank:] '\n' | grep '\.[eh]rl$')
-#for f in $erlfiles ; do
-#	apps=`cat $f | tr -d [:blank:] | grep '^\-include_lib' | cut -d \" -f 2|cut -d \/ -f 1`
-#	for a in $apps; do
-#		echo "erlang($a)"
-#	done
-#done
-
+erlfiles=$(echo $filelist | tr [:blank:] '\n' | grep '\.[eh]rl$')
+for f in $erlfiles ; do
+	apps=`cat $f | tr -d [:blank:] | grep '^\-include_lib' | cut -d \" -f 2|cut -d \/ -f 1`
+	for a in $apps; do
+		echo "erlang($a)"
+	done
+done | sort | uniq
 
