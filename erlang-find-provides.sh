@@ -5,6 +5,8 @@
 
 filelist=`sed "s/['\"]/\\\&/g"`
 
+/usr/lib/rpm/rpmdeps --provides $filelist
+
 basedirs=$(echo $filelist | tr [:blank:] '\n' | awk -F '/erlang/lib/' '{print $2}'|cut -d '/' -f 1 | uniq )
 
 for bd in $basedirs; do

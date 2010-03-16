@@ -15,6 +15,8 @@ done
 
 filelist=`sed "s/['\"]/\\\&/g"`
 
+/usr/lib/rpm/rpmdeps --requires $filelist
+
 # Get the list of *.app files
 appfiles=$(echo $filelist | tr [:blank:] '\n' | grep '/ebin/' | grep '\.app$')
 
