@@ -18,10 +18,10 @@ filelist=`sed "s/['\"]/\\\&/g"`
 /usr/lib/rpm/rpmdeps --requires $filelist
 
 # Get the list of *.app files
-appfiles=$(echo $filelist | tr [:blank:] '\n' | grep '/ebin/' | grep '\.app$')
+appfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.app$')
 
 for f in $appfiles; do
-	apps=`cat $f | tr -d '\n' |tr -d [:blank:]|awk -F '{applications,' '{print $2}'|awk -F '}' '{print $1}'|sed -e "s,.,,;s,.$,,;s.,. .g;"`
+	apps=`cat $f | tr -d [:space:] | grep -o -E '\{applications,\[.*[a-zA-Z0-9_]\]\}' | sed -e "s,.*\[,,g;s,\].*,,g;s.,. .g"`
 	for a in $apps; do
 		echo "erlang($a)"
 	done
@@ -32,7 +32,7 @@ if [ -n "$BUILDDIR" ]
 then
 	erlfiles=$(echo $filelist | tr [:blank:] '\n' | grep '\.[eh]rl$')
 	for f in `find $BUILDDIR -type f -name '*.[eh]rl'` ; do
-		apps=`cat $f | tr -d [:blank:] | grep '^\-include_lib' | cut -d \" -f 2|cut -d \/ -f 1`
+		apps=`cat $f | tr -d [:blank:] | grep -o -E '^\-include_lib\(\".*\"\)' | sed -e "s,.*(\",,g;s,\/.*,,g"`
 		for a in $apps; do
 			echo "erlang($a)"
 		done

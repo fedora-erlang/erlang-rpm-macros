@@ -8,19 +8,19 @@ filelist=`sed "s/['\"]/\\\&/g"`
 /usr/lib/rpm/rpmdeps --provides $filelist
 
 # Get the list of *.app files
-appfiles=$(echo $filelist | tr [:blank:] '\n' | grep '/ebin/' | grep '\.app$')
+appfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.app$')
 
 for f in $appfiles; do
-	app=`cat $f | tr -d '\n' | tr -d [:blank:] | awk -F '{application,' '{print $2}'|cut -d , -f 1`
-	ver=`cat $f | tr -d '\n' | tr -d [:blank:] | awk -F '{vsn,"' '{print $2}'|cut -d \" -f 1`
+	app=`cat $f | tr -d [:space:] | awk -F '{application,' '{print $2}'|cut -d , -f 1`
+	ver=`cat $f | tr -d [:space:] | grep -o -E '\{vsn,\".*[0-9]\"\}' | sed -e "s,.vsn\,\",,g;s,\".,,g"
 	echo "erlang($app) = $ver"
 done
 
 # Create list of directories and try guessing by directory name
-basedirs=$(echo $filelist | tr [:blank:] '\n' | awk -F '/erlang/lib/' '{print $2}'|cut -d '/' -f 1 | uniq )
+basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z_0-9]*-[0-9.]*\/ebin' | cut -d \/ -f 3 | sort | uniq)
 for bd in $basedirs; do
-	basename=`echo $bd | cut -d '-' -f 1`
-	basever=`echo $bd | cut -d '-' -f 2`
+	basename=`echo $bd | cut -d \- -f 1`
+	basever=`echo $bd | cut -d \- -f 2`
 	if [ -n "$basever" ]
 	then
 		echo "erlang($basename) = $basever"
