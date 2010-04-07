@@ -38,3 +38,11 @@ then
 		done
 	done | sort | uniq
 fi
+
+# Get the list of *.beam files
+beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
+
+for beam in $appfiles; do
+	escript /usr/lib/rpm/erlang-find-requires.escript $beam
+done
+
