@@ -26,3 +26,11 @@ for bd in $basedirs; do
 		echo "erlang($basename) = $basever"
 	fi
 done
+
+# Get the list of *.beam files
+beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
+
+for beam in $appfiles; do
+	escript /usr/lib/rpm/erlang-find-provides.escript $beam
+done
+
