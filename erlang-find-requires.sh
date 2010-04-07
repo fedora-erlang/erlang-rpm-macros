@@ -21,6 +21,6 @@ done
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
 
 for beam in $beamfiles; do
-	escript /usr/lib/rpm/erlang-find-requires.escript $beam
+	/usr/lib/rpm/erlang-find-requires.escript $beam
 done
 
