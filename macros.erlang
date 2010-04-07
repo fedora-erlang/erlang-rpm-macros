@@ -4,7 +4,7 @@
 %_erllibdir	%{_erldir}/lib
 
 %__erlang_provides %{_rpmconfigdir}/erlang-find-provides.sh
-%__erlang_requires %{_rpmconfigdir}/erlang-find-requires.sh -b %{_builddir}/%{buildsubdir} --
+%__erlang_requires %{_rpmconfigdir}/erlang-find-requires.sh
 
 %__erlang_provides_requires \
 %global _use_internal_dependency_generator 0\
