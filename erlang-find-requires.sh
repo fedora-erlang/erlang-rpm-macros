@@ -19,8 +19,5 @@ done
 
 # Get the list of *.beam files
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
-
-for beam in $beamfiles; do
-	/usr/lib/rpm/erlang-find-requires.escript $beam
-done
+/usr/lib/rpm/erlang-find-requires.escript $beamfiles | sort | uniq
 
