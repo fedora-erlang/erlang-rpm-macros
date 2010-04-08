@@ -29,5 +29,5 @@ done
 
 # Get the list of *.beam files
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
-/usr/lib/rpm/erlang-find-provides.escript $beamfiles
+/usr/lib/rpm/erlang-find-provides.escript $beamfiles | sed s,\',,g
 
