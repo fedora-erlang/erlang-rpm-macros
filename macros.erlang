@@ -3,7 +3,7 @@
 %_erldir	%{_libdir}/erlang
 %_erllibdir	%{_erldir}/lib
 
-%__erlang_provides %{_rpmconfigdir}/erlang-find-provides.sh -b %{_builddir}/%{buildsubdir} -n %{name} --
+%__erlang_provides %{_rpmconfigdir}/erlang-find-provides.sh -b %{_builddir}/%{buildsubdir} --
 %__erlang_requires %{_rpmconfigdir}/erlang-find-requires.sh
 
 %__erlang_provides_requires \

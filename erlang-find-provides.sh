@@ -4,12 +4,11 @@
 # information that needs to be included in the package.
 
 BUILDDIR=
-NAME=
+ERLMODULENAME=
 
 while true; do
 	case "$1" in
 		-b) BUILDDIR="$2"; shift 2;;
-		-n) NAME="$2"; shift 2;;
 		--) shift; break;;
 		*) echo "$0: option error at $1"; exit 1;;
 	esac
@@ -33,8 +32,13 @@ basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z
 for bd in $basedirs; do
 	basename=`echo $bd | cut -d \- -f 1`
 	basever=`echo $bd | cut -d \- -f 2`
-	if [ -n "$basever" ]
+	if [ -n "$basever" ] ;
 	then
+		# Notify us if it is an erts
+		if [ "$basename" == "erts" ] ;
+		then
+			ERLMODULENAME="erlang-erts"
+		fi
 		echo "erlang($basename) = $basever"
 	fi
 done
@@ -44,7 +48,7 @@ beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
 /usr/lib/rpm/erlang-find-provides.escript $beamfiles | sed s,\',,g
 
 # BIFs from erts - this module is very specific
-if [ "$NAME" == "erlang-erts" ] ;
+if [ "$ERLMODULENAME" == "erlang-erts" ] ;
 then
 	cat $BUILDDIR/erts/emulator/*/erl_bif_list.h 2>/dev/null |\
 		grep -v am__AtomAlias |\
