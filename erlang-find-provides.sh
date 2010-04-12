@@ -32,6 +32,22 @@ for f in $appfiles; do
 	echo "erlang($app) = $ver"
 done
 
+# Create list of directories and try guessing by directory name
+basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z_0-9]*-[0-9.]*\/ebin' | cut -d \/ -f 3 | sort | uniq)
+for bd in $basedirs; do
+	basename=`echo $bd | cut -d \- -f 1`
+	basever=`echo $bd | cut -d \- -f 2`
+	if [ -n "$basever" ] ;
+	then
+		# Notify us if it is an erts
+		if [ "$basename" == "erts" ] ;
+		then
+			ERLMODULENAME="erlang-erts"
+		fi
+		echo "erlang($basename) = $basever"
+	fi
+done
+
 # Get the list of *.beam files
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
 /usr/lib/rpm/erlang-find-provides.escript $beamfiles | sed s,\',,g
