@@ -68,10 +68,8 @@ basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z
 for bd in $basedirs; do
 	basename=`echo $bd | cut -d \- -f 1`
 	basever=`echo $bd | cut -d \- -f 2`
-	if [ -n "$basever" ] ;
-	then
-		if [ "$basename" == "erts" ] ;
-		then
+	case $basename in
+		"erts")
 			echo "erlang($basename) = $basever"
 
 			# BIFs from erts - this module is very specific
@@ -84,9 +82,13 @@ for bd in $basedirs; do
 
 			# Add BIFs for HiPE
 			grep "bif " $BUILDDIR/erts/emulator/hipe/*.tab | awk -F "bif " '{print "erlang(" $2 ")"}'
-
-		fi
-	fi
+			;;
+		"wx")
+			echo "erlang($basename) = $basever"
+			;;
+		*)
+			;;
+	esac
 done
 
 # Get the list of *.beam files
