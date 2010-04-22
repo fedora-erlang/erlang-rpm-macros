@@ -63,7 +63,7 @@ for f in $appfiles; do
 	echo "erlang($app) = $ver"
 done
 
-# Check for very special case - erts, by guessing by directory name
+# Check for two special cases by inspecting path to ebin directory
 basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z_0-9]*-[0-9.]*\/ebin' | cut -d \/ -f 3 | sort | uniq)
 for bd in $basedirs; do
 	basename=`echo $bd | cut -d \- -f 1`
@@ -84,6 +84,7 @@ for bd in $basedirs; do
 			grep "bif " $BUILDDIR/erts/emulator/hipe/*.tab | awk -F "bif " '{print "erlang(" $2 ")"}'
 			;;
 		"wx")
+			# wx module doesn't contain app-file.
 			echo "erlang($basename) = $basever"
 			;;
 		*)
