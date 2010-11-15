@@ -1,0 +1,11 @@
+Description
+============
+
+A set of macros for building Erlang packages for Fedora/EPEL easily.
+
+These macros will help you to track down missing exported functions,
+correctly provide dependencies between Erlang packages and in some cases
+they even help you to fix issues.
+
+This project still is in W.I.P. stage.
+
