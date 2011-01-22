@@ -11,3 +11,9 @@
 %global __find_provides %__erlang_provides\
 %global __find_requires %__erlang_requires\
 %{nil}
+
+%__rebar_compile \
+	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+	FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
+	rebar compile -v
