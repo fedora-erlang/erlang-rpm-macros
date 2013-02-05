@@ -27,7 +27,7 @@ filelist=`sed "s/['\"]/\\\&/g"`
 
 /usr/lib/rpm/rpmdeps --requires $filelist
 
-# Get the list of *.beam files
+# Get the list of built *.beam files
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
 /usr/lib/rpm/erlang-find-requires.escript $beamfiles | sort | uniq
 
