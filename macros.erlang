@@ -12,8 +12,14 @@
 %global __find_requires %__erlang_requires\
 %{nil}
 
-%__rebar_compile \
+%__rebar /usr/bin/rebar
+
+%rebar_compile \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
 	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-	FFLAGS="${FFLAGS:-%optflags}" ; export FFLAGS ; \
-	rebar compile -v
+	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+	%__rebar compile -vv
+# deprecated backwards compatibility
+%__rebar_compile %rebar_compile
