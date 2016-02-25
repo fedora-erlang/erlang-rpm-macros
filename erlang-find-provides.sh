@@ -44,42 +44,30 @@ for f in $appfiles; do
 	app=`cat $f | tr -d [:space:] | awk -F '{application,' '{print $2}'|cut -d , -f 1`
 	ver=`cat $f | tr -d [:space:] | grep -o -E '\{vsn,\".*[0-9]\"\}' | sed -e "s,.vsn\,\",,g;s,\".*,,g"`
 	echo "erlang($app) = $ver"
-done
 
-# Check for the special case by inspecting path to ebin directory
-basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z_0-9]*-[0-9.]*\/ebin' | cut -d \/ -f 3 | sort | uniq)
-for bd in $basedirs; do
-	basename=`echo $bd | cut -d \- -f 1`
-	basever=`echo $bd | cut -d \- -f 2`
-	case $basename in
-		"erts")
-			echo "erlang($basename) = $basever"
+	if [ "$app" == "erts" ]
+	then
+		# BIFs from erts - this module is very specific
+		cat $BUILDDIR/erts/emulator/*/erl_bif_list.h 2>/dev/null |\
+			grep -v am__AtomAlias |\
+			grep -o -E 'am_.*\,am_.*\,.\,' |\
+			sed s,am_,,g |\
+			sed -e "s,Plus,+,g;s,Minus,-,g;s,Neqeq,=\/=,g;s,Neq,\/=,g;s,Div,\/,g;s,Eqeq,=\:=,g;s,Eq,==,g;s,Ge,>=,g;s,Gt,>,g;s,Le,=<,g;s,Lt,<,g;s,Times,*,g;s,subtract,--,g;s,append\,,++\,,g" |\
+			awk -F \, '{print "erlang(" $1 ":" $2 "/" $3 ")" }'
 
-			# BIFs from erts - this module is very specific
-			cat $BUILDDIR/erts/emulator/*/erl_bif_list.h 2>/dev/null |\
-				grep -v am__AtomAlias |\
-				grep -o -E 'am_.*\,am_.*\,.\,' |\
-				sed s,am_,,g |\
-				sed -e "s,Plus,+,g;s,Minus,-,g;s,Neqeq,=\/=,g;s,Neq,\/=,g;s,Div,\/,g;s,Eqeq,=\:=,g;s,Eq,==,g;s,Ge,>=,g;s,Gt,>,g;s,Le,=<,g;s,Lt,<,g;s,Times,*,g;s,subtract,--,g;s,append\,,++\,,g" |\
-				awk -F \, '{print "erlang(" $1 ":" $2 "/" $3 ")" }'
+		# Add BIFs for HiPE
+		grep -h --colour=never -o -P  "(?<=bif )hipe_bifs:.*/[0-9]+" $BUILDDIR/erts/emulator/hipe/*.tab | awk '{print "erlang(" $1 ")"}'
 
-			# Add BIFs for HiPE
-			grep "bif " $BUILDDIR/erts/emulator/hipe/*.tab | awk -F "bif " '{print "erlang(" $2 ")"}'
+		ERL_DRV_MAJOR=`grep "^#define\s*ERL_DRV_EXTENDED_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_driver.h | cut -f 2`
+		ERL_DRV_MINOR=`grep "^#define\s*ERL_DRV_EXTENDED_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_driver.h | cut -f 2`
+		echo "erlang(erl_drv_version) = $ERL_DRV_MAJOR.$ERL_DRV_MINOR"
 
-			ERL_DRV_MAJOR=`grep "^#define\s*ERL_DRV_EXTENDED_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_driver.h | cut -f 2`
-			ERL_DRV_MINOR=`grep "^#define\s*ERL_DRV_EXTENDED_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_driver.h | cut -f 2`
-			echo "erlang(erl_drv_version) = $ERL_DRV_MAJOR.$ERL_DRV_MINOR"
-
-			ERL_NIF_MAJOR=`grep "^#define\s*ERL_NIF_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
-			ERL_NIF_MINOR=`grep "^#define\s*ERL_NIF_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
-			echo "erlang(erl_nif_version) = $ERL_NIF_MAJOR.$ERL_NIF_MINOR"
-			;;
-		*)
-			;;
-	esac
+		ERL_NIF_MAJOR=`grep "^#define\s*ERL_NIF_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
+		ERL_NIF_MINOR=`grep "^#define\s*ERL_NIF_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
+		echo "erlang(erl_nif_version) = $ERL_NIF_MAJOR.$ERL_NIF_MINOR"
+	fi
 done
 
 # Get the list of *.beam files
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
 /usr/lib/rpm/erlang-find-provides.escript $beamfiles | sed s,\',,g
-
