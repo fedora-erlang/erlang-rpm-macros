@@ -83,7 +83,7 @@ for f in $appfiles; do
 	echo "erlang($app) = $ver"
 done
 
-# Check for two special cases by inspecting path to ebin directory
+# Check for the special case by inspecting path to ebin directory
 basedirs=$(echo $filelist | tr [:blank:] '\n' | grep -o -E 'erlang\/lib\/[a-zA-Z_0-9]*-[0-9.]*\/ebin' | cut -d \/ -f 3 | sort | uniq)
 for bd in $basedirs; do
 	basename=`echo $bd | cut -d \- -f 1`
@@ -110,10 +110,6 @@ for bd in $basedirs; do
 			ERL_NIF_MAJOR=`grep "^#define\s*ERL_NIF_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
 			ERL_NIF_MINOR=`grep "^#define\s*ERL_NIF_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
 			echo "erlang(erl_nif_version) = $ERL_NIF_MAJOR.$ERL_NIF_MINOR"
-			;;
-		"wx")
-			# wx module doesn't contain app-file.
-			echo "erlang($basename) = $basever"
 			;;
 		*)
 			;;
