@@ -103,12 +103,12 @@ for bd in $basedirs; do
 			# Add BIFs for HiPE
 			grep "bif " $BUILDDIR/erts/emulator/hipe/*.tab | awk -F "bif " '{print "erlang(" $2 ")"}'
 
-			ERL_DRV_MAJOR=`grep "^#define ERL_DRV_EXTENDED_MAJOR_VERSION" erts/emulator/beam/erl_driver.h | cut -f 2`
-			ERL_DRV_MINOR=`grep "^#define ERL_DRV_EXTENDED_MINOR_VERSION" erts/emulator/beam/erl_driver.h | cut -f 2`
+			ERL_DRV_MAJOR=`grep "^#define\s*ERL_DRV_EXTENDED_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_driver.h | cut -f 2`
+			ERL_DRV_MINOR=`grep "^#define\s*ERL_DRV_EXTENDED_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_driver.h | cut -f 2`
 			echo "erlang(erl_drv_version) = $ERL_DRV_MAJOR.$ERL_DRV_MINOR"
 
-			ERL_NIF_MAJOR=`grep "^#define ERL_NIF_MAJOR_VERSION" erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
-			ERL_NIF_MINOR=`grep "^#define ERL_NIF_MINOR_VERSION" erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
+			ERL_NIF_MAJOR=`grep "^#define\s*ERL_NIF_MAJOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
+			ERL_NIF_MINOR=`grep "^#define\s*ERL_NIF_MINOR_VERSION\s*[0-9]$" $BUILDDIR/erts/emulator/beam/erl_nif.h | cut -d " " -f 3`
 			echo "erlang(erl_nif_version) = $ERL_NIF_MAJOR.$ERL_NIF_MINOR"
 			;;
 		"wx")
