@@ -43,43 +43,6 @@ appfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.app$')
 for f in $appfiles; do
 	app=`cat $f | tr -d [:space:] | awk -F '{application,' '{print $2}'|cut -d , -f 1`
 	ver=`cat $f | tr -d [:space:] | grep -o -E '\{vsn,\".*[0-9]\"\}' | sed -e "s,.vsn\,\",,g;s,\".*,,g"`
-
-	# HiPE module is different from others
-	if [ "$app" == "hipe" ] ;
-	then
-		# Hardcoded minimal set of HiPE exported functions
-		echo "erlang(hipe_amd64_main:rtl_to_amd64/3)"
-		echo "erlang(hipe_arm_main:rtl_to_arm/3)"
-		echo "erlang(hipe:c/1)"
-		echo "erlang(hipe:compile/4)"
-		echo "erlang(hipe_data_pp:pp/4)"
-		echo "erlang(hipe_icode2rtl:translate/2)"
-		echo "erlang(hipe_icode_heap_test:cfg/1)"
-		echo "erlang(hipe_ppc_main:rtl_to_ppc/3)"
-		echo "erlang(hipe_rtl_arch:endianess/0)"
-		echo "erlang(hipe_rtl_arch:nr_of_return_regs/0)"
-		echo "erlang(hipe_rtl_arch:word_size/0)"
-		echo "erlang(hipe_rtl_cfg:init/1)"
-		echo "erlang(hipe_rtl_cfg:linearize/1)"
-		echo "erlang(hipe_rtl_cfg:pp/1)"
-		echo "erlang(hipe_rtl_cfg:remove_trivial_bbs/1)"
-		echo "erlang(hipe_rtl_cfg:remove_unreachable_code/1)"
-		echo "erlang(hipe_rtl_cleanup_const:cleanup/1)"
-		echo "erlang(hipe_rtl_lcm:rtl_lcm/2)"
-		echo "erlang(hipe_rtl_ssa_avail_expr:cfg/1)"
-		echo "erlang(hipe_rtl_ssa:check/1)"
-		echo "erlang(hipe_rtl_ssa_const_prop:propagate/1)"
-		echo "erlang(hipe_rtl_ssa:convert/1)"
-		echo "erlang(hipe_rtl_ssapre:rtl_ssapre/2)"
-		echo "erlang(hipe_rtl_ssa:remove_dead_code/1)"
-		echo "erlang(hipe_rtl_ssa:unconvert/1)"
-		echo "erlang(hipe_rtl_symbolic:expand/1)"
-		echo "erlang(hipe_sparc_main:rtl_to_sparc/3)"
-		echo "erlang(hipe_tagscheme:fixnum_val/1)"
-		echo "erlang(hipe_tagscheme:is_fixnum/1)"
-		echo "erlang(hipe_x86_main:rtl_to_x86/3)"
-	fi
-
 	echo "erlang($app) = $ver"
 done
 
