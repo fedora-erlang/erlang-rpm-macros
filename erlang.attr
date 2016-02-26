@@ -1,0 +1,4 @@
+%__erlang_provides %{_rpmconfigdir}/erlang-find-provides.sh -b %{_builddir}/%{buildsubdir} --
+%__erlang_requires %{_rpmconfigdir}/erlang-find-requires.sh
+%__erlang_magic	^Erlang BEAM file$
+%__erlang_path	^/usr/lib(64)?/erlang/lib/.*/ebin/.*\\.(beam|app)$

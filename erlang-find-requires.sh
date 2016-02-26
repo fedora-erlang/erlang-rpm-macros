@@ -25,8 +25,6 @@
 
 filelist=`sed "s/['\"]/\\\&/g"`
 
-/usr/lib/rpm/rpmdeps --requires $filelist
-
 # Check for possible Port- and NIF-libraries
 sofiles==$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/priv/.*\.so$')
 if [ "$sofiles" != "" ]

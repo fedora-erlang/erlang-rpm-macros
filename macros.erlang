@@ -3,15 +3,6 @@
 %_erldir	%{_libdir}/erlang
 %_erllibdir	%{_erldir}/lib
 
-%__erlang_provides %{_rpmconfigdir}/erlang-find-provides.sh -b %{_builddir}/%{buildsubdir} --
-%__erlang_requires %{_rpmconfigdir}/erlang-find-requires.sh
-
-%__erlang_provides_requires \
-%global _use_internal_dependency_generator 0\
-%global __find_provides %__erlang_provides\
-%global __find_requires %__erlang_requires\
-%{nil}
-
 %__rebar /usr/bin/rebar
 
 %rebar_compile \
