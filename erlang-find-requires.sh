@@ -25,19 +25,6 @@
 
 filelist=`sed "s/['\"]/\\\&/g"`
 
-# Check for possible Port- and NIF-libraries
-sofiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/priv/.*\.so$')
-if [ "$sofiles" != "" ]
-then
-	ERL_DRV_MAJOR=`grep "^#define ERL_DRV_EXTENDED_MAJOR_VERSION" /usr/lib*/erlang/usr/include/erl_driver.h | cut -f 2`
-	ERL_DRV_MINOR=`grep "^#define ERL_DRV_EXTENDED_MINOR_VERSION" /usr/lib*/erlang/usr/include/erl_driver.h | cut -f 2`
-	echo "erlang(erl_drv_version) = $ERL_DRV_MAJOR.$ERL_DRV_MINOR"
-
-	ERL_NIF_MAJOR=`grep "^#define ERL_NIF_MAJOR_VERSION" /usr/lib*/erlang/usr/include/erl_nif.h | cut -d " " -f 3`
-	ERL_NIF_MINOR=`grep "^#define ERL_NIF_MINOR_VERSION" /usr/lib*/erlang/usr/include/erl_nif.h | cut -d " " -f 3`
-	echo "erlang(erl_nif_version) = $ERL_NIF_MAJOR.$ERL_NIF_MINOR"
-fi
-
 # Get the list of built *.beam files
 beamfiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/ebin/.*\.beam$')
 /usr/lib/rpm/erlang-find-requires.escript $beamfiles | sort | uniq
