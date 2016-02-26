@@ -26,7 +26,7 @@
 filelist=`sed "s/['\"]/\\\&/g"`
 
 # Check for possible Port- and NIF-libraries
-sofiles==$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/priv/.*\.so$')
+sofiles=$(echo $filelist | tr [:blank:] '\n' | grep -o -E '.*/priv/.*\.so$')
 if [ "$sofiles" != "" ]
 then
 	ERL_DRV_MAJOR=`grep "^#define ERL_DRV_EXTENDED_MAJOR_VERSION" /usr/lib*/erlang/usr/include/erl_driver.h | cut -f 2`
