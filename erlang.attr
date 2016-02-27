@@ -1,4 +1,5 @@
-%__erlang_provides %{_rpmconfigdir}/erlang-find-provides.py -b %{_builddir}/%{buildsubdir}
-%__erlang_requires %{_rpmconfigdir}/erlang-find-requires.py -b %{_builddir}/%{buildsubdir}
+# Disable Erlang provides until we decide how to store it effectively
+#%__erlang_provides %{_rpmconfigdir}/erlang-find-provides.py -b %{_builddir}/%{buildsubdir}
+%__erlang_requires %{_rpmconfigdir}/erlang-find-requires.py -b %{buildroot}
 %__erlang_magic	^Erlang BEAM file$
 %__erlang_path	^/usr/lib(64)?/erlang/lib/.*/ebin/.*\\.(beam|app)$
