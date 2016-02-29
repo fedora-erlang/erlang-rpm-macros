@@ -32,34 +32,34 @@ import sys
 
 # See $BUILDROOT/erts/emulator/*/erl_bif_list.h
 ErtsBIFProvides = [
-	"erlang(erlang:*/2)",
-	"erlang(erlang:++/2)",
-	"erlang(erlang:+/1)",
-	"erlang(erlang:+/2)",
-	"erlang(erlang:--/2)",
-	"erlang(erlang:-/1)",
-	"erlang(erlang:-/2)",
-	"erlang(erlang://2)",
-	"erlang(erlang:/=/2)",
-	"erlang(erlang:</2)",
-	"erlang(erlang:=/=/2)",
-	"erlang(erlang:=:=/2)",
-	"erlang(erlang:=</2)",
-	"erlang(erlang:==/2)",
-	"erlang(erlang:>/2)",
-	"erlang(erlang:>=/2)",
-	"erlang(erlang:and/2)",
-	"erlang(erlang:band/2)",
-	"erlang(erlang:bnot/1)",
-	"erlang(erlang:bor/2)",
-	"erlang(erlang:bsl/2)",
-	"erlang(erlang:bsr/2)",
-	"erlang(erlang:bxor/2)",
-	"erlang(erlang:div/2)",
-	"erlang(erlang:not/1)",
-	"erlang(erlang:or/2)",
-	"erlang(erlang:rem/2)",
-	"erlang(erlang:xor/2)"
+	("*", 2, 0),
+	("++", 2, 0),
+	("+", 1, 0),
+	("+", 2, 0),
+	("--", 2, 0),
+	("-", 1, 0),
+	("-", 2, 0),
+	("/", 2, 0),
+	("/=", 2, 0),
+	("<", 2, 0),
+	("=/=", 2, 0),
+	("=:=", 2, 0),
+	("=<", 2, 0),
+	("==", 2, 0),
+	(">", 2, 0),
+	(">=", 2, 0),
+	("and", 2, 0),
+	("band", 2, 0),
+	("bnot", 1, 0),
+	("bor", 2, 0),
+	("bsl", 2, 0),
+	("bsr", 2, 0),
+	("bxor", 2, 0),
+	("div", 2, 0),
+	("not", 1, 0),
+	("or", 2, 0),
+	("rem", 2, 0),
+	("xor", 2, 0)
 ]
 HipeBIFprovides = [
 	"erlang(hipe_bifs:add_ref/2)",
@@ -150,31 +150,28 @@ HipeBIFprovides = [
 def sort_and_uniq(List):
 	return list(set(List))
 
-def check_for_mfa(Dict, (M, F, A)):
-	Libdir = "/usr/lib64"
-	Beams = glob.glob("%s/erlang/lib/*/ebin/%s.beam" % (Libdir, M))
-	if Beams == []:
-		# Check locally
-		Beams = glob.glob("%s/%s/erlang/lib/*/ebin/%s.beam" % (BUILDROOT, Libdir, M))
+def check_for_mfa(Path, Dict, (M, F, A)):
+	Provides = []
+	Beams = glob.glob("%s/erlang/lib/*/ebin/%s.beam" % (Path, M))
+	if Beams != []:
+		Provides = Dict.get(Beams[0])
+		if not Provides:
+			# Check if a module actually has required function
+			b = pybeam.BeamFile(Beams[0])
+			# Two special cases:
+			# * eunit_test - add "erlang(eunit_test:nonexisting_function/0)"
+			# * wx - add "erlang(demo:start/0)"
+			Provides = b.exports
+			if M == "erlang":
+				Provides += ErtsBIFProvides
+			Dict[Beams[0]] = Provides
 
-	Provides = Dict.get(Beams[0])
-	if not Provides:
-		# Check if a module actually has required function
-		b = pybeam.BeamFile(Beams[0])
-		# Two special cases:
-		# * eunit_test - add "erlang(eunit_test:nonexisting_function/0)"
-		# * wx - add "erlang(demo:start/0)"
-		Provides = b.exports
-		Dict[Beams[0]] = b.exports
-	Found = False
-	for (F0, A0, Idx) in Provides:
-		if F0 == F and A0 == A:
-			Found = True
-			break
-	if Found:
-		return Beams[0]
-	else:
-		return None
+		for (F0, A0, Idx) in Provides:
+			if F0 == F and A0 == A:
+				# Always return first match
+				return Beams[0]
+
+	return None
 
 def get_rpms_by_path(Path):
 	Packages = []
@@ -212,10 +209,15 @@ for package in sorted([p for p in rawcontent if beammask.match(p)]):
 
 Requires = list(set(Requires))
 
-# TODO let's find modules which provides these requires
+Libdir = "/usr/lib64"
+
+Dict = {}
+# Filter out locally provided Requires
+Requires = filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, Libdir), Dict, X) is None, Requires)
+
 Dict = {}
 for (M,F,A) in Requires:
-	if not check_for_mfa(Dict, (M, F, A)):
+	if not check_for_mfa(Libdir, Dict, (M, F, A)):
 		print "ERROR. Cant find %s:%s/%d" % (M,F,A)
 		exit(1)
 
