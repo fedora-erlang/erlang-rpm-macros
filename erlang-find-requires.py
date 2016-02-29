@@ -184,14 +184,17 @@ def get_rpms_by_path(Path):
 
 BUILDROOT=""
 ISA=""
+LIBDIR=""
 
-opts, args = getopt.getopt(sys.argv[1:],"b:i:",["builddir=", "isa="])
+opts, args = getopt.getopt(sys.argv[1:],"b:i:l:",["builddir=", "isa=", "libdir="])
 
 for opt, arg in opts:
 	if opt in ("-b", "--builddir"):
 		BUILDROOT=arg
 	if opt in ("-i", "--isa"):
 		ISA=arg
+	if opt in ("-l", "--libdir"):
+		LIBDIR=arg
 
 # All the files and directories from the package (including %docs and %license)
 rawcontent = sys.stdin.readlines()
@@ -209,15 +212,13 @@ for package in sorted([p for p in rawcontent if beammask.match(p)]):
 
 Requires = list(set(Requires))
 
-Libdir = "/usr/lib64"
-
 Dict = {}
 # Filter out locally provided Requires
-Requires = filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, Libdir), Dict, X) is None, Requires)
+Requires = filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, Requires)
 
 Dict = {}
 for (M,F,A) in Requires:
-	if not check_for_mfa(Libdir, Dict, (M, F, A)):
+	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
 		print "ERROR. Cant find %s:%s/%d" % (M,F,A)
 		exit(1)
 
