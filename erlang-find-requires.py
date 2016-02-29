@@ -186,12 +186,15 @@ def get_rpms_by_path(Path):
 	return Packages
 
 BUILDROOT=""
+ISA=""
 
-opts, args = getopt.getopt(sys.argv[1:],"b:",["builddir="])
+opts, args = getopt.getopt(sys.argv[1:],"b:i:",["builddir=", "isa="])
 
 for opt, arg in opts:
 	if opt in ("-b", "--builddir"):
 		BUILDROOT=arg
+	if opt in ("-i", "--isa"):
+		ISA=arg
 
 # All the files and directories from the package (including %docs and %license)
 rawcontent = sys.stdin.readlines()
@@ -223,4 +226,5 @@ Requires = [item for sublist in map(lambda x: get_rpms_by_path(x), sort_and_uniq
 
 
 for req in sort_and_uniq(Requires):
-	print req
+	# erlang-erts(x86-64)
+	print "%s%s" % (req, ISA)
