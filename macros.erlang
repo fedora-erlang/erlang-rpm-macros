@@ -15,10 +15,10 @@
 # deprecated backwards compatibility
 %__rebar_compile %rebar_compile
 
-%__erlang_nif_version %(eval: \
+%__erlang_nif_version %(eval \
 	rpm -q erlang-erts --provides | grep --color=no erl_nif_version \
 )
 
-%__erlang_drv_version %(eval: \
+%__erlang_drv_version %(eval \
 	rpm -q erlang-erts --provides | grep --color=no erl_drv_version \
 )
