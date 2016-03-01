@@ -31,6 +31,7 @@ import rpm
 import sys
 
 # See $BUILDROOT/erts/emulator/*/erl_bif_list.h
+# erlang:F/A
 ErtsBIFProvides = [
 	("*", 2, 0),
 	("++", 2, 0),
@@ -61,88 +62,91 @@ ErtsBIFProvides = [
 	("rem", 2, 0),
 	("xor", 2, 0)
 ]
-HipeBIFprovides = [
-	"erlang(hipe_bifs:add_ref/2)",
-	"erlang(hipe_bifs:alloc_data/2)",
-	"erlang(hipe_bifs:array/2)",
-	"erlang(hipe_bifs:array_length/1)",
-	"erlang(hipe_bifs:array_sub/2)",
-	"erlang(hipe_bifs:array_update/3)",
-	"erlang(hipe_bifs:atom_to_word/1)",
-	"erlang(hipe_bifs:bif_address/3)",
-	"erlang(hipe_bifs:bitarray/2)",
-	"erlang(hipe_bifs:bitarray_sub/2)",
-	"erlang(hipe_bifs:bitarray_update/3)",
-	"erlang(hipe_bifs:bytearray/2)",
-	"erlang(hipe_bifs:bytearray_sub/2)",
-	"erlang(hipe_bifs:bytearray_update/3)",
-	"erlang(hipe_bifs:call_count_clear/1)",
-	"erlang(hipe_bifs:call_count_get/1)",
-	"erlang(hipe_bifs:call_count_off/1)",
-	"erlang(hipe_bifs:call_count_on/1)",
-	"erlang(hipe_bifs:check_crc/1)",
-	"erlang(hipe_bifs:code_size/1)",
-	"erlang(hipe_bifs:constants_size/0)",
-	"erlang(hipe_bifs:debug_native_called/2)",
-	"erlang(hipe_bifs:enter_code/2)",
-	"erlang(hipe_bifs:enter_sdesc/1)",
-	"erlang(hipe_bifs:find_na_or_make_stub/2)",
-	"erlang(hipe_bifs:fun_to_address/1)",
-	"erlang(hipe_bifs:gc_info/0)",
-	"erlang(hipe_bifs:gc_info_clear/0)",
-	"erlang(hipe_bifs:gc_timer/0)",
-	"erlang(hipe_bifs:gc_timer_clear/0)",
-	"erlang(hipe_bifs:get_fe/2)",
-	"erlang(hipe_bifs:get_hrvtime/0)",
-	"erlang(hipe_bifs:get_rts_param/1)",
-	"erlang(hipe_bifs:incremental_gc_info/0)",
-	"erlang(hipe_bifs:invalidate_funinfo_native_addresses/1)",
-	"erlang(hipe_bifs:in_native/0)",
-	"erlang(hipe_bifs:llvm_fix_pinned_regs/0)",
-	"erlang(hipe_bifs:mark_referred_from/1)",
-	"erlang(hipe_bifs:merge_term/1)",
-	"erlang(hipe_bifs:message_info/0)",
-	"erlang(hipe_bifs:message_info_clear/0)",
-	"erlang(hipe_bifs:message_sizes/0)",
-	"erlang(hipe_bifs:misc_timer/0)",
-	"erlang(hipe_bifs:misc_timer_clear/0)",
-	"erlang(hipe_bifs:modeswitch_debug_off/0)",
-	"erlang(hipe_bifs:modeswitch_debug_on/0)",
-	"erlang(hipe_bifs:nstack_used_size/0)",
-	"erlang(hipe_bifs:patch_call/3)",
-	"erlang(hipe_bifs:patch_insn/3)",
-	"erlang(hipe_bifs:pause_times/0)",
-	"erlang(hipe_bifs:primop_address/1)",
-	"erlang(hipe_bifs:process_info/0)",
-	"erlang(hipe_bifs:process_info_clear/0)",
-	"erlang(hipe_bifs:redirect_referred_from/1)",
-	"erlang(hipe_bifs:ref/1)",
-	"erlang(hipe_bifs:ref_get/1)",
-	"erlang(hipe_bifs:ref_set/2)",
-	"erlang(hipe_bifs:remove_refs_from/1)",
-	"erlang(hipe_bifs:send_timer/0)",
-	"erlang(hipe_bifs:send_timer_clear/0)",
-	"erlang(hipe_bifs:set_funinfo_native_address/3)",
-	"erlang(hipe_bifs:set_native_address/3)",
-	"erlang(hipe_bifs:set_native_address_in_fe/2)",
-	"erlang(hipe_bifs:shared_gc_info/0)",
-	"erlang(hipe_bifs:shared_gc_timer/0)",
-	"erlang(hipe_bifs:show_estack/1)",
-	"erlang(hipe_bifs:show_heap/1)",
-	"erlang(hipe_bifs:show_nstack/1)",
-	"erlang(hipe_bifs:show_pcb/1)",
-	"erlang(hipe_bifs:show_term/1)",
-	"erlang(hipe_bifs:stop_hrvtime/0)",
-	"erlang(hipe_bifs:system_crc/0)",
-	"erlang(hipe_bifs:system_timer/0)",
-	"erlang(hipe_bifs:system_timer_clear/0)",
-	"erlang(hipe_bifs:term_to_word/1)",
-	"erlang(hipe_bifs:trap_count_clear/0)",
-	"erlang(hipe_bifs:trap_count_get/0)",
-	"erlang(hipe_bifs:update_code_size/3)",
-	"erlang(hipe_bifs:write_u32/2)",
-	"erlang(hipe_bifs:write_u64/2)",
-	"erlang(hipe_bifs:write_u8/2)"
+
+# See $BUILDROOT/erts/emulator/*/erl_bif_list.h
+# hipe_bifs:F/A
+HipeBIFSprovides = [
+	("add_ref", 2, 0),
+	("alloc_data", 2, 0),
+	("array", 2, 0),
+	("array_length", 1, 0),
+	("array_sub", 2, 0),
+	("array_update", 3, 0),
+	("atom_to_word", 1, 0),
+	("bif_address", 3, 0),
+	("bitarray", 2, 0),
+	("bitarray_sub", 2, 0),
+	("bitarray_update", 3, 0),
+	("bytearray", 2, 0),
+	("bytearray_sub", 2, 0),
+	("bytearray_update", 3, 0),
+	("call_count_clear", 1, 0),
+	("call_count_get", 1, 0),
+	("call_count_off", 1, 0),
+	("call_count_on", 1, 0),
+	("check_crc", 1, 0),
+	("code_size", 1, 0),
+	("constants_size", 0, 0),
+	("debug_native_called", 2, 0),
+	("enter_code", 2, 0),
+	("enter_sdesc", 1, 0),
+	("find_na_or_make_stub", 2, 0),
+	("fun_to_address", 1, 0),
+	("gc_info", 0, 0),
+	("gc_info_clear", 0, 0),
+	("gc_timer", 0, 0),
+	("gc_timer_clear", 0, 0),
+	("get_fe", 2, 0),
+	("get_hrvtime", 0, 0),
+	("get_rts_param", 1, 0),
+	("incremental_gc_info", 0, 0),
+	("invalidate_funinfo_native_addresses", 1, 0),
+	("in_native", 0, 0),
+	("llvm_fix_pinned_regs", 0, 0),
+	("mark_referred_from", 1, 0),
+	("merge_term", 1, 0),
+	("message_info", 0, 0),
+	("message_info_clear", 0, 0),
+	("message_sizes", 0, 0),
+	("misc_timer", 0, 0),
+	("misc_timer_clear", 0, 0),
+	("modeswitch_debug_off", 0, 0),
+	("modeswitch_debug_on", 0, 0),
+	("nstack_used_size", 0, 0),
+	("patch_call", 3, 0),
+	("patch_insn", 3, 0),
+	("pause_times", 0, 0),
+	("primop_address", 1, 0),
+	("process_info", 0, 0),
+	("process_info_clear", 0, 0),
+	("redirect_referred_from", 1, 0),
+	("ref", 1, 0),
+	("ref_get", 1, 0),
+	("ref_set", 2, 0),
+	("remove_refs_from", 1, 0),
+	("send_timer", 0, 0),
+	("send_timer_clear", 0, 0),
+	("set_funinfo_native_address", 3, 0),
+	("set_native_address", 3, 0),
+	("set_native_address_in_fe", 2, 0),
+	("shared_gc_info", 0, 0),
+	("shared_gc_timer", 0, 0),
+	("show_estack", 1, 0),
+	("show_heap", 1, 0),
+	("show_nstack", 1, 0),
+	("show_pcb", 1, 0),
+	("show_term", 1, 0),
+	("stop_hrvtime", 0, 0),
+	("system_crc", 0, 0),
+	("system_timer", 0, 0),
+	("system_timer_clear", 0, 0),
+	("term_to_word", 1, 0),
+	("trap_count_clear", 0, 0),
+	("trap_count_get", 0, 0),
+	("update_code_size", 3, 0),
+	("write_u32", 2, 0),
+	("write_u64", 2, 0),
+	("write_u8", 2, 0)
 ]
 
 # sort + uniq
@@ -173,6 +177,8 @@ def check_for_mfa(Path, Dict, (M, F, A)):
 
 	return None
 
+# We return more than one match since there could be situations where the same
+# object belongs to more that one package.
 def get_rpms_by_path(Path):
 	Packages = []
 	ts = rpm.TransactionSet()
@@ -197,6 +203,8 @@ for opt, arg in opts:
 		LIBDIR=arg
 
 # All the files and directories from the package (including %docs and %license)
+# Modern RPM version passes files one by one, while older version create a list
+# of files and pass the entire list
 rawcontent = sys.stdin.readlines()
 
 Requires = []
@@ -204,8 +212,10 @@ Requires = []
 rawcontent = map(lambda x: x.rstrip('\n'), rawcontent)
 
 # Iterate over all BEAM-files
+# See note above regarding list of beam-fuiles vs. one beam-file
 beammask = re.compile(".*/ebin/.*\.beam")
-for package in sorted([p for p in rawcontent if beammask.match(p)]):
+rawcontent = sorted([p for p in rawcontent if beammask.match(p)])
+for package in rawcontent:
         b = pybeam.BeamFile(package)
 	# [(M,F,A),...]
 	Requires += b.imports
@@ -217,17 +227,19 @@ Dict = {}
 Requires = filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, Requires)
 
 Dict = {}
+# TODO let's find modules which provides these requires
 for (M,F,A) in Requires:
 	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
-		print "ERROR. Cant find %s:%s/%d" % (M,F,A)
-		exit(1)
+		print "ERROR: Cant find %s:%s/%d while processing %s" % (M,F,A, rawcontent[0])
+		# We shouldn't stop further processing here - let pretend this is just a warning
+		#exit(1)
 
 Requires = Dict.keys()
 
 # let's find RPM-packets to which these modules belongs
-Requires = [item for sublist in map(lambda x: get_rpms_by_path(x), sort_and_uniq(Requires)) for item in sublist]
+Requires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(Requires)) for item in sublist]
 
 
 for req in sort_and_uniq(Requires):
-	# erlang-erts(x86-64)
+	# erlang-erts(x86-64) erlang-kernel(x86-64) ...
 	print "%s%s" % (req, ISA)
