@@ -15,6 +15,26 @@
 # deprecated backwards compatibility
 %__rebar_compile %rebar_compile
 
+%rebar_ct \
+	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+	%__rebar ct skip_deps=true -vv
+
+%rebar_doc \
+	%__rebar doc -vv
+
+%rebar_eunit \
+	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+	%__rebar eunit skip_deps=true -vv
+
+
 %__erlang_nif_version %(eval \
 	rpm -q erlang-erts --provides | grep --color=no erl_nif_version \
 )
