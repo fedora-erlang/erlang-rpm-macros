@@ -12,7 +12,8 @@
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
-	%__rebar compile -vv
+	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
+	%__rebar compile skip_deps=true -vv
 # deprecated backwards compatibility
 %__rebar_compile %rebar_compile
 
