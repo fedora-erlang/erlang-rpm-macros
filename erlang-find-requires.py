@@ -230,7 +230,7 @@ Dict = {}
 # TODO let's find modules which provides these requires
 for (M,F,A) in Requires:
 	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
-		print "ERROR: Cant find %s:%s/%d while processing %s" % (M,F,A, rawcontent[0])
+		print "ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, rawcontent[0])
 		# We shouldn't stop further processing here - let pretend this is just a warning
 		#exit(1)
 
