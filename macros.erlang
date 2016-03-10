@@ -37,14 +37,14 @@
 	fi \
 %{nil}
 
-%rebar_eunit \
+%rebar_eunit(C:)\
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
 	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
 	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
-	%__rebar eunit skip_deps=true -vv \
+	%__rebar eunit skip_deps=true -vv %{-C:-C %{-C*}} \
 %{nil}
 
 #
