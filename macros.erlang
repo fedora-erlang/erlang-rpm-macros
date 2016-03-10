@@ -78,9 +78,9 @@
 	%rebar_compile \
 	%rebar_doc
 
-%erlang_test \
-	%rebar_eunit \
-	%rebar_ct
+%erlang_test(C:) \
+	%rebar_eunit %{-C:-C %{-C*}} \
+	%rebar_ct %{-C:-C %{-C*}}
 
 %erlang_install \
 if [ "%{__erlappname}" != "" ] ; then \
