@@ -68,6 +68,8 @@
 %erlang_ensure_app_src \
 	if [ ! -f src/%{__erlappname}.app.src -a ! -f src/%{__erlappname}.app -a ! -f ebin/%{__erlappname}.app ] ; then \
 		echo "{application, %{__erlappname}, [{description, \\\"%{summary}\\\"}, {vsn, \\\"%{version}\\\"}, {modules, []}]}." > src/%{__erlappname}.app.src \
+	else \
+		echo "*.app file (or *.app.src template) was found." \
 	fi \
 %{nil}
 
