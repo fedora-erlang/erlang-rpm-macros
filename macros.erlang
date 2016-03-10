@@ -19,14 +19,14 @@
 # deprecated backwards compatibility
 %__rebar_compile %rebar_compile
 
-%rebar_ct \
+%rebar_ct(C:) \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
 	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
 	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
-	%__rebar ct skip_deps=true -vv \
+	%__rebar ct skip_deps=true -vv %{-C:-C %{-C*}} \
 %{nil}
 
 %rebar_doc \
