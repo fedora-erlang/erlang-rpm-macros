@@ -13,7 +13,9 @@
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
 	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
-	%__rebar compile skip_deps=true -vv
+	%__rebar compile skip_deps=true -vv \
+%{nil}
+
 # deprecated backwards compatibility
 %__rebar_compile %rebar_compile
 
@@ -24,14 +26,16 @@
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
-	%__rebar ct skip_deps=true -vv
+	%__rebar ct skip_deps=true -vv \
+%{nil}
 
 %rebar_doc \
 	if [ -f doc/overview.edoc ] ; then \
 		%__rebar doc -vv \
 	else \
 		echo "No 'doc/overview.edoc' file was found, so docs aren't generated." \
-	fi
+	fi \
+%{nil}
 
 %rebar_eunit \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
@@ -40,7 +44,8 @@
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
-	%__rebar eunit skip_deps=true -vv
+	%__rebar eunit skip_deps=true -vv \
+%{nil}
 
 
 %__erlang_nif_version %(eval \
