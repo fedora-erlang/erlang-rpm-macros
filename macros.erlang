@@ -27,7 +27,11 @@
 	%__rebar ct skip_deps=true -vv
 
 %rebar_doc \
-	%__rebar doc -vv
+	if [ -f doc/overview.edoc ] ; then \
+		%__rebar doc -vv \
+	else \
+		echo "No 'doc/overview.edoc' file was found, so docs aren't generated." \
+	fi
 
 %rebar_eunit \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
