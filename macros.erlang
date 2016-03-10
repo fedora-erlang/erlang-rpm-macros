@@ -47,6 +47,61 @@
 	%__rebar eunit skip_deps=true -vv \
 %{nil}
 
+#
+# More generic macros
+#
+
+# Define any of these but not all at the same time
+%__erlappname %{?realname}%{?srcname}%{?erlappname}
+
+#%__erlappname %(eval \
+#	if [ "%{?realname}" != "" ] ; then \
+#		echo -n "%{realname}"
+#	elif [ "%{?srcname}" != "" ] ; then \
+#		echo -n "%{srcname}" \
+#	else \
+#		echo -n "%{erlappname}" \
+#	fi \
+#)
+#
+
+%erlang_ensure_app_src \
+	if [ ! -f src/%{__erlappname}.app.src -a ! -f src/%{__erlappname}.app -a ! -f ebin/%{__erlappname}.app ] ; then \
+		echo "{application, %{__erlappname}, [{description, \\\"%{summary}\\\"}, {vsn, \\\"%{version}\\\"}, {modules, []}]}." > src/%{__erlappname}.app.src \
+	fi \
+%{nil}
+
+%erlang_compile \
+	%erlang_ensure_app_src \
+	%rebar_compile \
+	%rebar_doc
+
+%erlang_test \
+	%rebar_eunit \
+	%rebar_ct
+
+%erlang_install \
+if [ "%{__erlappname}" != "" ] ; then \
+	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ \
+	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+	if [ -f ebin/%{__erlappname}.app ] ; then \
+		%{__install} -m 0644 -p ebin/%{__erlappname}.app %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+	fi \
+	%{__install} -m 0644 -p ebin/*.beam %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+	if [ -d include/ ] ; then \
+		for erlincludefile in `ls include/*.hrl` ; do \
+			%{__install} -D -m 0644 -p $erlincludefile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$erlincludefile \
+		done \
+	fi \
+	if [ -d priv/ ] ; then \
+		for solibfile in `ls priv/*.so` ; do \
+			%{__install} -D -m 0755 -p $solibfile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$solibfile \
+		done \
+	fi \
+fi \
+%{nil}
+
+%erlang_appdir %{_erllibdir}/%{__erlappname}-%{version}
 
 %__erlang_nif_version %(eval \
 	rpm -q erlang-erts --provides | grep --color=no erl_nif_version \
