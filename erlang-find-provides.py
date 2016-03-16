@@ -170,7 +170,7 @@ for appfile in sorted([p for p in rawcontent if appmask.match(p)]):
 	# module erlang-erts (Erlang VM)
 	if appcontents.split(",")[1].lstrip().rstrip() == "erts":
 		# Export DRV version
-		f = open("%s/erts/emulator/beam/erl_nif.h" % BUILDDIR, 'r')
+		f = open("%s/erts/emulator/beam/erl_driver.h" % BUILDDIR, 'r')
 		ERL_DRV_EXTENDED_MAJOR_VERSION = None
 		ERL_DRV_EXTENDED_MINOR_VERSION = None
 		for line in f:
