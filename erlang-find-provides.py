@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Copyright (c) 2016 Peter Lemenkov <lemenkov@gmail.com>
 #
@@ -158,7 +158,7 @@ HipeBIFprovides = [
 
 Provides = []
 
-rawcontent = map(lambda x: x.rstrip('\n'), rawcontent)
+rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 
 # Check for a specific cases
 appmask = re.compile(".*/ebin/.*\.app")
@@ -216,7 +216,7 @@ for package in sorted([p for p in rawcontent if beammask.match(p)]):
 	# Two special cases:
 	# * eunit_test - add "erlang(eunit_test:nonexisting_function/0)"
 	# * wx - add "erlang(demo:start/0)"
-	Provides += map(lambda x: 'erlang(%s:%s/%d)' % (b.modulename,x[0],x[1]), b.exports)
+	Provides += list(map(lambda x: 'erlang(%s:%s/%d)' % (b.modulename,x[0],x[1]), b.exports))
 
 for prov in sorted(Provides):
-	print prov
+	print(prov)

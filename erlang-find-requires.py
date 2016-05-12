@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Copyright (c) 2016 Peter Lemenkov <lemenkov@gmail.com>
 #
@@ -154,7 +154,8 @@ HipeBIFSprovides = [
 def sort_and_uniq(List):
 	return list(set(List))
 
-def check_for_mfa(Path, Dict, (M, F, A)):
+def check_for_mfa(Path, Dict, MFA):
+	(M, F, A) = MFA
 	Provides = []
 	Beams = glob.glob("%s/erlang/lib/*/ebin/%s.beam" % (Path, M))
 	if Beams != []:
@@ -184,7 +185,7 @@ def get_rpms_by_path(Path):
 	ts = rpm.TransactionSet()
 	mi = ts.dbMatch('basenames', Path)
 	for h in mi:
-		Packages += [h[rpm.RPMTAG_NAME]]
+		Packages += [h[rpm.RPMTAG_NAME].decode("utf-8")]
 
 	return Packages
 
@@ -209,14 +210,14 @@ rawcontent = sys.stdin.readlines()
 
 Requires = []
 
-rawcontent = map(lambda x: x.rstrip('\n'), rawcontent)
+rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 
 # Iterate over all BEAM-files
 # See note above regarding list of beam-fuiles vs. one beam-file
 beammask = re.compile(".*/ebin/.*\.beam")
 rawcontent = sorted([p for p in rawcontent if beammask.match(p)])
 for package in rawcontent:
-        b = pybeam.BeamFile(package)
+	b = pybeam.BeamFile(package)
 	# [(M,F,A),...]
 	Requires += b.imports
 
@@ -224,17 +225,17 @@ Requires = list(set(Requires))
 
 Dict = {}
 # Filter out locally provided Requires
-Requires = filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, Requires)
+Requires = list(filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, Requires))
 
 Dict = {}
 # TODO let's find modules which provides these requires
 for (M,F,A) in Requires:
 	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
-		print "ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, rawcontent[0])
+		print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, rawcontent[0]))
 		# We shouldn't stop further processing here - let pretend this is just a warning
 		#exit(1)
 
-Requires = Dict.keys()
+Requires = list(Dict.keys())
 
 # let's find RPM-packets to which these modules belongs
 Requires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(Requires)) for item in sublist]
@@ -242,4 +243,4 @@ Requires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(Requires)) f
 
 for req in sort_and_uniq(Requires):
 	# erlang-erts(x86-64) erlang-kernel(x86-64) ...
-	print "%s%s" % (req, ISA)
+	print("%s%s" % (req, ISA))
