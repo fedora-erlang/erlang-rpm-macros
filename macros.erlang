@@ -12,6 +12,7 @@
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
+	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
 	%__rebar compile skip_deps=true -vv \
@@ -27,6 +28,7 @@
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
+	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	%__rebar ct skip_deps=true -vv %{-C:-C %{-C*}} \
 %{nil}
@@ -46,6 +48,7 @@
 	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
+	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	%__rebar eunit skip_deps=true -vv %{-C:-C %{-C*}} \
 %{nil}
