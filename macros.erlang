@@ -13,6 +13,7 @@
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
 	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
+	echo "{{git, \\\"%{_builddir}/%{buildsubdir}\\\"}, \\\"%{version}\\\"}." > %{_builddir}/%{buildsubdir}/vsn.cache ; \
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
 	%__rebar compile skip_deps=true -vv \
