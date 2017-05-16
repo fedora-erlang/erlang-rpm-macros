@@ -215,8 +215,8 @@ rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 # Iterate over all BEAM-files
 # See note above regarding list of beam-files vs. one beam-file
 beammask = re.compile(".*/ebin/.*\.beam")
-rawcontent = sorted([p for p in rawcontent if beammask.match(p)])
-for package in rawcontent:
+beamfiles = sorted([p for p in rawcontent if beammask.match(p)])
+for package in beamfiles:
 	b = pybeam.BeamFile(package)
 	# [(M,F,A),...]
 	Requires += b.imports
@@ -231,7 +231,7 @@ Dict = {}
 # TODO let's find modules which provides these requires
 for (M,F,A) in Requires:
 	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
-		print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, rawcontent[0]))
+		print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, beamfiles[0]))
 		# We shouldn't stop further processing here - let pretend this is just a warning
 		#exit(1)
 
@@ -239,7 +239,6 @@ Requires = list(Dict.keys())
 
 # let's find RPM-packets to which these modules belongs
 Requires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(Requires)) for item in sublist]
-
 
 for req in sort_and_uniq(Requires):
 	# erlang-erts(x86-64) erlang-kernel(x86-64) ...
