@@ -213,7 +213,7 @@ Requires = []
 rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 
 # Iterate over all BEAM-files
-# See note above regarding list of beam-fuiles vs. one beam-file
+# See note above regarding list of beam-files vs. one beam-file
 beammask = re.compile(".*/ebin/.*\.beam")
 rawcontent = sorted([p for p in rawcontent if beammask.match(p)])
 for package in rawcontent:
