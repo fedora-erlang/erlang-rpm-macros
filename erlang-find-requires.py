@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (c) 2016 Peter Lemenkov <lemenkov@gmail.com>
+# Copyright (c) 2016,2017 Peter Lemenkov <lemenkov@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -191,6 +191,21 @@ def get_rpms_by_path(Path):
 
 	return Packages
 
+def inspect_so_library(library, export_name, dependency_name):
+    with open(library, 'rb') as f:
+        elffile = ELFFile(f)
+        dynsym = elffile.get_section_by_name(b'.dynsym')
+        for sym in dynsym.iter_symbols():
+
+            # Check if it looks like a NIF-library
+            if sym.name == export_name:
+                ts = rpm.TransactionSet()
+                mi = ts.dbMatch('providename', dependency_name)
+                h = next(mi)
+                ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
+                if dependency_name in ds:
+                    print("%s = %s" % (dependency_name, ds[dependency_name]))
+
 BUILDROOT=""
 ISA=""
 LIBDIR=""
@@ -251,25 +266,5 @@ libmask = re.compile(".*/priv/.*\.so")
 libfiles = sorted([p for p in rawcontent if libmask.match(p)])
 
 for library in libfiles:
-    with open(library, 'rb') as f:
-        elffile = ELFFile(f)
-        dynsym = elffile.get_section_by_name(b'.dynsym')
-        for sym in dynsym.iter_symbols():
-
-            # Check if it looks like a NIF-library
-            if sym.name == b'nif_init':
-                ts = rpm.TransactionSet()
-                mi = ts.dbMatch('providename', 'erlang(erl_nif_version)')
-                h = next(mi)
-                ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
-                if 'erlang(erl_nif_version)' in ds:
-                    print("%s = %s" % ('erlang(erl_nif_version)', ds['erlang(erl_nif_version)']))
-
-            # Check if it looks like a port driver library
-            if sym.name == b'driver_init':
-                ts = rpm.TransactionSet()
-                mi = ts.dbMatch('providename', 'erlang(erl_drv_version)')
-                h = next(mi)
-                ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
-                if 'erlang(erl_drv_version)' in ds:
-                    print("%s = %s" % ('erlang(erl_drv_version)', ds['erlang(erl_drv_version)']))
+    inspect_so_library(library, b'nif_init', 'erlang(erl_nif_version)')
+    inspect_so_library(library, b'driver_init', 'erlang(erl_drv_version)')
