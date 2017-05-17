@@ -113,6 +113,11 @@ fi \
 %erlang_appdir %{_erllibdir}/%{__erlappname}-%{version}
 %_erlang_appdir %erlang_appdir
 
+#
+# These __erlang_nif_version and __erlang_drv_version should be picked up
+# automatically. We still keep them for some unknown extra cases.
+#
+
 %__erlang_nif_version %(eval \
 	rpm -q erlang-erts --provides | grep --color=no erl_nif_version \
 )
