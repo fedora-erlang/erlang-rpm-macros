@@ -30,6 +30,8 @@ import re
 import rpm
 import sys
 
+from elftools.elf.elffile import ELFFile
+
 # See $BUILDROOT/erts/emulator/*/erl_bif_list.h
 # erlang:F/A
 ErtsBIFProvides = [
@@ -243,3 +245,22 @@ Requires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(Requires)) f
 for req in sort_and_uniq(Requires):
 	# erlang-erts(x86-64) erlang-kernel(x86-64) ...
 	print("%s%s" % (req, ISA))
+
+# Search for driver- and/or NIF-libraries
+libmask = re.compile(".*/priv/.*\.so")
+libfiles = sorted([p for p in rawcontent if libmask.match(p)])
+
+for library in libfiles:
+    with open(library, 'rb') as f:
+        elffile = ELFFile(f)
+        dynsym = elffile.get_section_by_name(b'.dynsym')
+        for sym in dynsym.iter_symbols():
+
+            # Check if it looks like a NIF-library
+            if sym.name == b'nif_init':
+                ts = rpm.TransactionSet()
+                mi = ts.dbMatch('providename', 'erlang(erl_nif_version)')
+                h = next(mi)
+                ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
+                if 'erlang(erl_nif_version)' in ds:
+                    print("%s = %s" % ('erlang(erl_nif_version)', ds['erlang(erl_nif_version)']))
