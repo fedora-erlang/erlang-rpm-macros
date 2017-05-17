@@ -210,7 +210,7 @@ for opt, arg in opts:
 # of files and pass the entire list
 rawcontent = sys.stdin.readlines()
 
-Requires = []
+BeamMFARequires = []
 
 rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 
@@ -221,28 +221,28 @@ beamfiles = sorted([p for p in rawcontent if beammask.match(p)])
 for package in beamfiles:
 	b = pybeam.BeamFile(package)
 	# [(M,F,A),...]
-	Requires += b.imports
+	BeamMFARequires += b.imports
 
-Requires = list(set(Requires))
+BeamMFARequires = list(set(BeamMFARequires))
 
 Dict = {}
 # Filter out locally provided Requires
-Requires = list(filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, Requires))
+BeamMFARequires = list(filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, BeamMFARequires))
 
 Dict = {}
 # TODO let's find modules which provides these requires
-for (M,F,A) in Requires:
+for (M,F,A) in BeamMFARequires:
 	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
 		print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, beamfiles[0]))
 		# We shouldn't stop further processing here - let pretend this is just a warning
 		#exit(1)
 
-Requires = list(Dict.keys())
+BeamModRequires = list(Dict.keys())
 
 # let's find RPM-packets to which these modules belongs
-Requires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(Requires)) for item in sublist]
+RPMRequires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(BeamModRequires)) for item in sublist]
 
-for req in sort_and_uniq(Requires):
+for req in sort_and_uniq(RPMRequires):
 	# erlang-erts(x86-64) erlang-kernel(x86-64) ...
 	print("%s%s" % (req, ISA))
 
