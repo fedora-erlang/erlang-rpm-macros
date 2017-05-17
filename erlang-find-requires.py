@@ -264,3 +264,12 @@ for library in libfiles:
                 ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
                 if 'erlang(erl_nif_version)' in ds:
                     print("%s = %s" % ('erlang(erl_nif_version)', ds['erlang(erl_nif_version)']))
+
+            # Check if it looks like a port driver library
+            if sym.name == b'driver_init':
+                ts = rpm.TransactionSet()
+                mi = ts.dbMatch('providename', 'erlang(erl_drv_version)')
+                h = next(mi)
+                ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
+                if 'erlang(erl_drv_version)' in ds:
+                    print("%s = %s" % ('erlang(erl_drv_version)', ds['erlang(erl_drv_version)']))
