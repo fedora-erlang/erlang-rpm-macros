@@ -23,7 +23,7 @@
 # This script reads filenames from STDIN and outputs any relevant requires
 # information that needs to be included in the package.
 
-import getopt
+import argparse
 import glob
 import pybeam
 import re
@@ -151,7 +151,7 @@ HipeBIFSprovides = [
 	("write_u8", 2, 0)
 ]
 
-# sort + uniq
+# fastest sort + uniq
 # see http://www.peterbe.com/plog/uniqifiers-benchmark
 def sort_and_uniq(List):
 	return list(set(List))
@@ -159,45 +159,39 @@ def sort_and_uniq(List):
 def check_for_mfa(Path, Dict, MFA):
 	(M, F, A) = MFA
 	Provides = []
-	Beams = glob.glob("%s/erlang/lib/*/ebin/%s.beam" % (Path, M))
+        #  First we try to find a (list of) module(s)...
+	Beams = glob.glob("%s/%s.beam" % (Path, M))
 	if Beams != []:
+		# ...and we'll use a first match, e.g. Beams[0] (as Erlang VM will do).
+                # But before parsing module let's check if we already parsed
+                # it, and stored the results in a dict.
 		Provides = Dict.get(Beams[0])
 		if not Provides:
-			# Check if a module actually has required function
+			# No, we have to parse beam-file for the first time.
 			b = pybeam.BeamFile(Beams[0])
-			# Two special cases:
+			Provides = b.exports
+			# Note - there are two special cases:
 			# * eunit_test - add "erlang(eunit_test:nonexisting_function/0)"
 			# * wx - add "erlang(demo:start/0)"
-			Provides = b.exports
 			if M == "erlang":
 				Provides += ErtsBIFProvides
 			Dict[Beams[0]] = Provides
 
+                # Now Provides contains module's M export table. Let's check if
+                # this module M actually exports a required function F with
+                # arity A.
 		for (F0, A0, Idx) in Provides:
 			if F0 == F and A0 == A:
-				# Always return first match
+				# Always return first match. See comment above.
 				return Beams[0]
 
 	return None
-
-# We return more than one match since there could be situations where the same
-# object belongs to more that one package.
-def get_rpms_by_path(Path):
-	Packages = []
-	ts = rpm.TransactionSet()
-	mi = ts.dbMatch('basenames', Path)
-	for h in mi:
-		Packages += [h[rpm.RPMTAG_NAME].decode("utf-8")]
-
-	return Packages
 
 def inspect_so_library(library, export_name, dependency_name):
     with open(library, 'rb') as f:
         elffile = ELFFile(f)
         dynsym = elffile.get_section_by_name(b'.dynsym')
         for sym in dynsym.iter_symbols():
-
-            # Check if it looks like a NIF-library
             if sym.name == export_name:
                 ts = rpm.TransactionSet()
                 mi = ts.dbMatch('providename', dependency_name)
@@ -206,19 +200,22 @@ def inspect_so_library(library, export_name, dependency_name):
                 if dependency_name in ds:
                     print("%s = %s" % (dependency_name, ds[dependency_name]))
 
-BUILDROOT=""
-ISA=""
-LIBDIR=""
+##
+## Begin
+##
 
-opts, args = getopt.getopt(sys.argv[1:],"b:i:l:",["builddir=", "isa=", "libdir="])
+# Get package's ISA first
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--isa", nargs='?')
+args = parser.parse_args()
+if args.isa:
+    # Convert "(x86-64)" to "x86-64"
+    ISA=args.isa[1:-1]
+else:
+    ISA="noarch"
 
-for opt, arg in opts:
-	if opt in ("-b", "--builddir"):
-		BUILDROOT=arg
-	if opt in ("-i", "--isa"):
-		ISA=arg
-	if opt in ("-l", "--libdir"):
-		LIBDIR=arg
+# Get the main Erlang directory
+ERLLIBDIR = glob.glob("/usr/lib*/erlang/lib")[0]
 
 # All the files and directories from the package (including %docs and %license)
 # Modern RPM version passes files one by one, while older version create a list
@@ -238,28 +235,47 @@ for package in beamfiles:
 	# [(M,F,A),...]
 	BeamMFARequires += b.imports
 
-BeamMFARequires = list(set(BeamMFARequires))
+BeamMFARequires = sort_and_uniq(BeamMFARequires)
 
 Dict = {}
 # Filter out locally provided Requires
-BeamMFARequires = list(filter(lambda X: check_for_mfa("%s/%s" % (BUILDROOT, LIBDIR), Dict, X) is None, BeamMFARequires))
+
+# dirname(beamfiles[0]) could be:
+# * '$BUILDROOT/elixir-1.4.2-1.fc26.noarch/usr/share/elixir/1.4.2/lib/mix/ebin'
+# * '$BUILDROOT/erlang-y-combinator-1.0-1.fc26.noarch/usr/lib/erlang/lib/y-1.0/ebin'
+# * '$BUILDROOT/erlang-emmap-0-0.18.git05ae1bb.fc26.x86_64/usr/lib64/erlang/lib/emmap-0/ebin'
+BeamMFARequires = list(filter(lambda X: check_for_mfa('/'.join(beamfiles[0].split('/')[:-3] + ["*", "ebin"]), Dict, X) is None, BeamMFARequires))
 
 Dict = {}
 # TODO let's find modules which provides these requires
 for (M,F,A) in BeamMFARequires:
-	if not check_for_mfa(LIBDIR, Dict, (M, F, A)):
-		print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, beamfiles[0]))
-		# We shouldn't stop further processing here - let pretend this is just a warning
-		#exit(1)
+    # FIXME check in noarch Erlang dir also
+    if not check_for_mfa("%s/*/ebin" % ERLLIBDIR, Dict, (M, F, A)):
+        print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, beamfiles[0]))
+        # We shouldn't stop further processing here - let pretend this is just a warning
+        #exit(1)
 
-BeamModRequires = list(Dict.keys())
+BeamModRequires = sort_and_uniq(Dict.keys())
 
 # let's find RPM-packets to which these modules belongs
-RPMRequires = [item for sublist in map(get_rpms_by_path, sort_and_uniq(BeamModRequires)) for item in sublist]
+# We return more than one match since there could be situations where the same
+# object belongs to more that one package.
+ts = rpm.TransactionSet()
+RPMRequires = [item for sublist in map(
+        lambda x: [(h[rpm.RPMTAG_NAME].decode("utf-8"), h[rpm.RPMTAG_ARCH].decode("utf-8")) for h in ts.dbMatch('basenames', x)],
+        BeamModRequires
+    ) for item in sublist]
 
-for req in sort_and_uniq(RPMRequires):
-	# erlang-erts(x86-64) erlang-kernel(x86-64) ...
-	print("%s%s" % (req, ISA))
+for (req, PkgISA) in sort_and_uniq(RPMRequires):
+        # ISA == "" if rpmbuild invoked with --target noarch
+        if ISA == "noarch" or ISA == "" or PkgISA == "noarch":
+            # noarch package - we don't care about arch dependency
+	    # erlang-erts erlang-kernel ...
+            print("%s" % req)
+        else:
+            # arch-dependent package - we will use exact arch of adependent packages
+	    # erlang-erts(x86-64) erlang-kernel(x86-64) ...
+            print("%s(%s)" % (req, PkgISA))
 
 # Search for driver- and/or NIF-libraries
 libmask = re.compile(".*/priv/.*\.so")
