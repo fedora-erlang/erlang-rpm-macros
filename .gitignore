@@ -1,5 +1,8 @@
+*.beam
 *.diff
 *.orig
 *.patch
+*.pyc
 *.rej
 *~
+__pycache__/
