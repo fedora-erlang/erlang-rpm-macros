@@ -225,7 +225,7 @@ def inspect_beam_file(ISA, filename):
     for (M,F,A) in BeamMFARequires:
         # FIXME check in noarch Erlang dir also
         if not check_for_mfa("%s/*/ebin" % ERLLIBDIR, Dict, (M, F, A)):
-            print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, filename))
+            print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, filename), file=sys.stderr)
             # We shouldn't stop further processing here - let pretend this is just a warning
             #exit(1)
 
