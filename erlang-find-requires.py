@@ -205,6 +205,7 @@ def inspect_so_library(library, export_name, dependency_name):
 def inspect_beam_file(ISA, filename):
     # Get the main Erlang directory
     ERLLIBDIR = glob.glob("/usr/lib*/erlang/lib")[0]
+    ERLSHRDIR = "/usr/share/erlang/lib"
 
     b = pybeam.BeamFile(filename)
     # [(M,F,A),...]
@@ -224,7 +225,7 @@ def inspect_beam_file(ISA, filename):
     # TODO let's find modules which provides these requires
     for (M,F,A) in BeamMFARequires:
         # FIXME check in noarch Erlang dir also
-        if not check_for_mfa("%s/*/ebin" % ERLLIBDIR, Dict, (M, F, A)):
+        if not check_for_mfa("%s/*/ebin" % ERLLIBDIR, Dict, (M, F, A)) and not check_for_mfa("%s/*/ebin" % ERLSHRDIR, Dict, (M, F, A)):
             print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, filename), file=sys.stderr)
             # We shouldn't stop further processing here - let pretend this is just a warning
             #exit(1)

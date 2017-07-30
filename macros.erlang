@@ -1,7 +1,7 @@
 # handy macros for erlang-related packages
 
 %_erldir	%{_libdir}/erlang
-%_erllibdir	%{_erldir}/lib
+%_erllibdir	%(a=%{buildarch}; if [ "$a" == "noarch" ] ; then echo %{_datadir}/erlang/lib; else echo %{_erldir}/lib; fi)
 
 %__rebar /usr/bin/rebar
 
@@ -16,6 +16,7 @@
 	echo "{{git, \\\"%{_builddir}/%{buildsubdir}\\\"}, \\\"%{version}\\\"}." > %{_builddir}/%{buildsubdir}/vsn.cache ; \
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
+	ERL_LIBS="%{_datadir}/erlang/lib/" ; export ERL_LIBS ; \
 	%__rebar compile skip_deps=true -vv \
 %{nil}
 
