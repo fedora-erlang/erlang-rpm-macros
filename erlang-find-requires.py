@@ -204,6 +204,14 @@ def inspect_so_library(library, export_name, dependency_name):
         f.close()
         return None
 
+
+# Compatibility function for the upcomint RPM Python3 API
+# See https://bugzilla.redhat.com/1693771
+def b2s(data):
+    if isinstance(data, bytes):
+        return data.decode('utf-8')
+    return data
+
 def inspect_beam_file(ISA, filename):
     # Get the main Erlang directory
     ERLLIBDIR = glob.glob("/usr/lib*/erlang/lib")[0]
@@ -239,7 +247,7 @@ def inspect_beam_file(ISA, filename):
     # object belongs to more that one package.
     ts = rpm.TransactionSet()
     RPMRequires = [item for sublist in map(
-            lambda x: [(h[rpm.RPMTAG_NAME].decode("utf-8"), h[rpm.RPMTAG_ARCH].decode("utf-8")) for h in ts.dbMatch('basenames', x)],
+            lambda x: [(b2s(h[rpm.RPMTAG_NAME]), b2s(h[rpm.RPMTAG_ARCH])) for h in ts.dbMatch('basenames', x)],
             BeamModRequires
         ) for item in sublist]
 
