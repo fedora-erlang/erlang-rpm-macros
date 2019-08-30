@@ -19,12 +19,12 @@ class TestAllMethods(unittest.TestCase):
     def test_inspect_so_library_nif(self):
         # This test requires erlang-crypto RPM package installed
         filepath = glob.glob("/usr/lib*/erlang/lib/crypto-*/priv/lib/crypto.so")[0]
-        self.assertEqual(M.inspect_so_library(filepath, b'nif_init', 'erlang(erl_nif_version)'), ErlNifDep)
+        self.assertEqual(M.inspect_so_library(filepath, 'nif_init', 'erlang(erl_nif_version)'), ErlNifDep)
 
     def test_inspect_so_library_drv(self):
         # This test requires erlang-erlsyslog RPM package installed
         filepath = glob.glob("/usr/lib*/erlang/lib/erlsyslog-*/priv/erlsyslog_drv.so")[0]
-        self.assertEqual(M.inspect_so_library(filepath, b'driver_init', 'erlang(erl_drv_version)'), ErlDrvDep)
+        self.assertEqual(M.inspect_so_library(filepath, 'driver_init', 'erlang(erl_drv_version)'), ErlDrvDep)
 
     def test_inspect_beam_file_arch(self):
         Deps = ['erlang-erts(x86-64)', 'erlang-kernel(x86-64)', 'erlang-stdlib(x86-64)']

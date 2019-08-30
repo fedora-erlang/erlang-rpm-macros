@@ -190,7 +190,7 @@ def check_for_mfa(Path, Dict, MFA):
 def inspect_so_library(library, export_name, dependency_name):
     with open(library, 'rb') as f:
         elffile = ELFFile(f)
-        dynsym = elffile.get_section_by_name(b'.dynsym')
+        dynsym = elffile.get_section_by_name('.dynsym')
         for sym in dynsym.iter_symbols():
             if sym.name == export_name:
                 ts = rpm.TransactionSet()
@@ -288,8 +288,8 @@ if __name__ == "__main__":
         Ret = inspect_beam_file(ISA, filename)
 
     elif filename.endswith(".so"):
-        Ret += [inspect_so_library(filename, b'nif_init', 'erlang(erl_nif_version)')]
-        Ret += [inspect_so_library(filename, b'driver_init', 'erlang(erl_drv_version)')]
+        Ret += [inspect_so_library(filename, 'nif_init', 'erlang(erl_nif_version)')]
+        Ret += [inspect_so_library(filename, 'driver_init', 'erlang(erl_drv_version)')]
 
     elif filename.endswith(".app"):
         # TODO we don't know what to do with *.app files yet
