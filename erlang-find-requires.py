@@ -198,8 +198,10 @@ def inspect_so_library(library, export_name, dependency_name):
                 h = next(mi)
                 ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
                 if dependency_name in ds:
+                    f.close()
                     return "%s = %s" % (dependency_name, ds[dependency_name])
 
+        f.close()
         return None
 
 def inspect_beam_file(ISA, filename):
