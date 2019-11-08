@@ -34,6 +34,12 @@ class TestAllMethods(unittest.TestCase):
         Deps = ['erlang-erts', 'erlang-kernel', 'erlang-stdlib']
         self.assertEqual(M.inspect_beam_file('noarch', "./test.beam"), Deps)
 
+    def test_check_for_absense_of_buildarch_macro(self):
+        self.assertEqual(rpm.expandMacro("%{buildarch}"), "%{buildarch}")
+
+    def test_check_for_target_cpu_macro(self):
+        self.assertNotEqual(rpm.expandMacro("%{_target_cpu}"), "%{_target_cpu}")
+
 if __name__ == "__main__":
     M = __import__("erlang-find-requires")
 

@@ -1,7 +1,7 @@
 # handy macros for erlang-related packages
 
 %_erldir	%{_libdir}/erlang
-%_erllibdir	%(a=%{buildarch}; if [ "$a" == "noarch" ] ; then echo %{_datadir}/erlang/lib; else echo %{_erldir}/lib; fi)
+%_erllibdir	%(if [ "%{_target_cpu}" == "noarch" ] ; then echo %{_datadir}/erlang/lib; else echo %{_erldir}/lib; fi)
 
 %__rebar /usr/bin/rebar
 
