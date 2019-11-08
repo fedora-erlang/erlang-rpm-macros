@@ -205,7 +205,7 @@ def inspect_so_library(library, export_name, dependency_name):
         return None
 
 
-# Compatibility function for the upcomint RPM Python3 API
+# Compatibility function for the upcoming RPM Python3 API
 # See https://bugzilla.redhat.com/1693771
 def b2s(data):
     if isinstance(data, bytes):
