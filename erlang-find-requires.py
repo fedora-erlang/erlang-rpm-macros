@@ -32,6 +32,10 @@ import sys
 
 from elftools.elf.elffile import ELFFile
 
+# Globals
+ERLLIBDIR = ""
+ERLSHRDIR = "/usr/share/erlang/lib"
+
 # See $BUILDROOT/erts/emulator/*/erl_bif_list.h
 # erlang:F/A
 ErtsBIFProvides = [
@@ -213,10 +217,6 @@ def b2s(data):
     return data
 
 def inspect_beam_file(ISA, filename):
-    # Get the main Erlang directory
-    ERLLIBDIR = glob.glob("/usr/lib*/erlang/lib")[0]
-    ERLSHRDIR = "/usr/share/erlang/lib"
-
     b = pybeam.BeamFile(filename)
     # [(M,F,A),...]
     BeamMFARequires = sort_and_uniq(b.imports)
@@ -282,6 +282,10 @@ if __name__ == "__main__":
         ISA=args.isa[1:-1]
     else:
         ISA="noarch"
+
+    # Get the main Erlang directory
+    prog = re.compile("/usr/lib(64)?/erlang/lib")
+    ERLLIBDIR = prog.match(glob.glob("/usr/lib*/erlang/lib/erts-*/ebin/erts.app")[0])[0]
 
     # All the Erlang files matched by erlang.attr specification from the
     # package. Modern RPM version passes files one by one (a list
