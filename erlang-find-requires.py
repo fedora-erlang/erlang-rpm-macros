@@ -244,7 +244,7 @@ def inspect_beam_file(ISA, filename):
 
     # let's find RPM-packets to which these modules belongs
     # We return more than one match since there could be situations where the same
-    # object belongs to more that one package.
+    # object belongs to more than one package.
     ts = rpm.TransactionSet()
     RPMRequires = [item for sublist in map(
             lambda x: [(b2s(h[rpm.RPMTAG_NAME]), b2s(h[rpm.RPMTAG_ARCH])) for h in ts.dbMatch('basenames', x)],
