@@ -1,4 +1,5 @@
 import glob
+import re
 import rpm
 import unittest
 
@@ -12,9 +13,8 @@ class TestAllMethods(unittest.TestCase):
 
     def test_check_for_mfa(self):
         # This test requires erlang-erts RPM package installed
-        ERLLIBDIR = glob.glob("/usr/lib*/erlang/lib")[0]
         filepath = glob.glob('/usr/lib*/erlang/lib/erts-*/ebin/erlang.beam')[0]
-        self.assertEqual(M.check_for_mfa("%s/*/ebin" % ERLLIBDIR, {}, ('erlang', 'load_nif', 2)), filepath)
+        self.assertEqual(M.check_for_mfa("%s/*/ebin" % M.ERLLIBDIR, {}, ('erlang', 'load_nif', 2)), filepath)
 
     def test_inspect_so_library_nif(self):
         # This test requires erlang-crypto RPM package installed
@@ -49,5 +49,8 @@ if __name__ == "__main__":
     ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
     ErlDrvDep = "erlang(erl_drv_version) = %s" % ds['erlang(erl_drv_version)']
     ErlNifDep = "erlang(erl_nif_version) = %s" % ds['erlang(erl_nif_version)']
+
+    prog = re.compile("/usr/lib(64)?/erlang/lib")
+    M.ERLLIBDIR = prog.match(glob.glob("/usr/lib*/erlang/lib/erts-*/ebin/erts.app")[0])[0]
 
     unittest.main()
