@@ -20,9 +20,6 @@
 	%__rebar compile skip_deps=true -vv \
 %{nil}
 
-# deprecated backwards compatibility
-%__rebar_compile %rebar_compile
-
 %rebar_ct(C:) \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
 	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
