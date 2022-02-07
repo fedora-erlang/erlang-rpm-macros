@@ -4,6 +4,63 @@
 %_erllibdir	%(if [ "%{_target_cpu}" == "noarch" ] ; then echo %{_datadir}/erlang/lib; else echo %{_erldir}/lib; fi)
 
 %__rebar /usr/bin/rebar
+%__rebar2 /usr/bin/rebar
+%__rebar3 /usr/bin/rebar3
+
+##
+## Rebar3 macros
+##
+
+%rebar3_compile \
+	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+	VSN="%{version}" ; export VSN ; \
+	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
+	echo "{{git, \\\"%{_builddir}/%{buildsubdir}\\\"}, \\\"%{version}\\\"}." > %{_builddir}/%{buildsubdir}/vsn.cache ; \
+	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
+	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
+	ERL_LIBS="%{_datadir}/erlang/lib/" ; export ERL_LIBS ; \
+	%__rebar3 compile skip_deps=true -vv \
+%{nil}
+
+%rebar3_ct(C:) \
+	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+	VSN="%{version}" ; export VSN ; \
+	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
+	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
+	%__rebar3 ct skip_deps=true -vv %{-C:-C %{-C*}} \
+%{nil}
+
+%rebar3_doc \
+	if [ -f doc/overview.edoc ] ; then \
+		%__rebar3 doc -vv \
+	else \
+		echo "No 'doc/overview.edoc' file was found, so docs aren't generated." \
+	fi \
+%{nil}
+
+%rebar3_eunit(C:) \
+	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
+	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
+	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
+	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
+	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
+	VSN="%{version}" ; export VSN ; \
+	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
+	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
+	%__rebar3 eunit skip_deps=true -vv %{-C:-C %{-C*}} \
+%{nil}
+
+##
+## These are going to be deprecated (renamed to rebar2 ones)
+##
 
 %rebar_compile \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
@@ -77,6 +134,45 @@
 		echo "*.app file (or *.app.src template) was found." \
 	fi \
 %{nil}
+
+##
+## Rebar3 macros
+##
+
+%erlang3_compile \
+	%erlang_ensure_app_src \
+	%rebar3_compile \
+	%rebar3_doc
+
+%erlang3_test(C:) \
+	%rebar3_eunit %{-C:-C %{-C*}} \
+	%rebar3_ct %{-C:-C %{-C*}}
+
+%erlang3_install \
+if [ "%{__erlappname}" != "" ] ; then \
+	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ \
+	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+	if [ -f _build/default/lib/%{__erlappname}/ebin/%{__erlappname}.app ] ; then \
+		%{__install} -m 0644 -p _build/default/lib/%{__erlappname}/ebin/%{__erlappname}.app %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+	fi \
+	%{__install} -m 0644 -p _build/default/lib/%{__erlappname}/ebin/*.beam %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+	if [ -d include/ ] ; then \
+		for erlincludefile in `ls include/*.hrl` ; do \
+			%{__install} -D -m 0644 -p $erlincludefile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$erlincludefile \
+		done \
+	fi \
+	if [ -d priv/ ] ; then \
+		for solibfile in `ls priv/*.so` ; do \
+			%{__install} -D -m 0755 -p $solibfile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$solibfile \
+		done \
+	fi \
+fi \
+%{nil}
+
+
+##
+## These are going to be deprecated (renamed to rebar2 ones)
+##
 
 %erlang_compile \
 	%erlang_ensure_app_src \
