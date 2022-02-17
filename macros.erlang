@@ -41,7 +41,7 @@
 
 %rebar3_doc \
 	if [ -f doc/overview.edoc ] ; then \
-		%__rebar3 doc -vv \
+		%__rebar3 edoc -vv \
 	else \
 		echo "No 'doc/overview.edoc' file was found, so docs aren't generated." \
 	fi \
