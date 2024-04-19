@@ -163,14 +163,14 @@ rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 appmask = re.compile(".*/ebin/.*\.app")
 # There should be only one app-file or none
 for appfile in sorted([p for p in rawcontent if appmask.match(p)]):
-    with open(appfile, 'r') as f0
+    with open(appfile, 'r') as f0:
         appcontents = f0.read()
 
         # module erlang-erts (Erlang VM)
         if appcontents.split(",")[1].lstrip().rstrip() == "erts":
 
             # Export DRV version
-            with open("%s/erts/emulator/beam/erl_driver.h" % BUILDDIR, 'r') as f
+            with open("%s/erts/emulator/beam/erl_driver.h" % BUILDDIR, 'r') as f:
                 ERL_DRV_EXTENDED_MAJOR_VERSION = None
                 ERL_DRV_EXTENDED_MINOR_VERSION = None
                 for line in f:
@@ -185,7 +185,7 @@ for appfile in sorted([p for p in rawcontent if appmask.match(p)]):
                 Provides += "erlang(erl_drv_version) = %s.%s" % (ERL_DRV_EXTENDED_MAJOR_VERSION, ERL_DRV_EXTENDED_MINOR_VERSION)
 
             # Export NIF version
-            with open("%s/erts/emulator/beam/erl_nif.h" % BUILDDIR, 'r') as f
+            with open("%s/erts/emulator/beam/erl_nif.h" % BUILDDIR, 'r') as f:
                 ERL_NIF_MAJOR_VERSION = None
                 ERL_NIF_MINOR_VERSION = None
                 for line in f:
