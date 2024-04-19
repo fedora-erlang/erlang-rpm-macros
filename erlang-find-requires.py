@@ -246,7 +246,6 @@ def inspect_beam_file(ISA, filename):
             #exit(1)
 
     BeamModRequires = sort_and_uniq(Dict.keys())
-    print(BeamModRequires)
 
     # let's find RPM-packets to which these modules belongs
     # We return more than one match since there could be situations where the same
