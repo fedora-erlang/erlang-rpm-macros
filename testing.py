@@ -46,7 +46,7 @@ if __name__ == "__main__":
     ts = rpm.TransactionSet()
     mi = ts.dbMatch('name', "erlang-erts")
     h = next(mi)
-    ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
+    ds = dict(map(lambda x: x[0].split(" ")[1::2], rpm.ds(h, "providename")))
     ErlDrvDep = "erlang(erl_drv_version) = %s" % ds['erlang(erl_drv_version)']
     ErlNifDep = "erlang(erl_nif_version) = %s" % ds['erlang(erl_nif_version)']
 
