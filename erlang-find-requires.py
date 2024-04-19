@@ -200,7 +200,7 @@ def inspect_so_library(library, export_name, dependency_name):
                 ts = rpm.TransactionSet()
                 mi = ts.dbMatch('providename', dependency_name)
                 h = next(mi)
-                ds = dict(map(lambda x: x[0].split(" ")[1::2], h.dsFromHeader('providename')))
+                ds = dict(map(lambda x: x[0].split(" ")[1::2], rpm.ds(h, "providename")))
                 if dependency_name in ds:
                     f.close()
                     return "%s = %s" % (dependency_name, ds[dependency_name])
