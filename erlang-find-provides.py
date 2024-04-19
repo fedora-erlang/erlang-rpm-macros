@@ -24,7 +24,6 @@
 # information that needs to be included in the package.
 
 import getopt
-import glob
 import pybeam
 import re
 import sys
