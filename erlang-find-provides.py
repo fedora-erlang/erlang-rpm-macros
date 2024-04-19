@@ -163,50 +163,49 @@ rawcontent = list(map(lambda x: x.rstrip('\n'), rawcontent))
 appmask = re.compile(".*/ebin/.*\.app")
 # There should be only one app-file or none
 for appfile in sorted([p for p in rawcontent if appmask.match(p)]):
-	f = open(appfile, 'r')
-	appcontents = f.read()
-	f.close()
-	# module erlang-erts (Erlang VM)
-	if appcontents.split(",")[1].lstrip().rstrip() == "erts":
-		# Export DRV version
-		f = open("%s/erts/emulator/beam/erl_driver.h" % BUILDDIR, 'r')
-		ERL_DRV_EXTENDED_MAJOR_VERSION = None
-		ERL_DRV_EXTENDED_MINOR_VERSION = None
-		for line in f:
-			ms = re.search("(?<=^#define\sERL_DRV_EXTENDED_MAJOR_VERSION\s)[0-9]+(?=$)", line)
-			if ms:
-				ERL_DRV_EXTENDED_MAJOR_VERSION = ms.group(0)
-		for line in f:
-			ms = re.search("(?<=^#define\sERL_DRV_EXTENDED_MINOR_VERSION\s)[0-9]+(?=$)", line)
-			if ms:
-				ERL_DRV_EXTENDED_MINOR_VERSION = ms.group(0)
-		# FIXME die here if ERL_DRV_EXTENDED_MAJOR_VERSION or ERL_DRV_EXTENDED_MINOR_VERSION is None
-		Provides += "erlang(erl_drv_version) = %s.%s" % (ERL_DRV_EXTENDED_MAJOR_VERSION, ERL_DRV_EXTENDED_MINOR_VERSION)
-		f.close()
+    with open(appfile, 'r') as f0
+        appcontents = f0.read()
 
-		# Export NIF version
-		f = open("%s/erts/emulator/beam/erl_nif.h" % BUILDDIR, 'r')
-		ERL_NIF_MAJOR_VERSION = None
-		ERL_NIF_MINOR_VERSION = None
-		for line in f:
-			ms = re.search("(?<=^#define\sERL_NIF_MAJOR_VERSION\s)[0-9]+(?=$)", line)
-			if ms:
-				ERL_NIF_MAJOR_VERSION = ms.group(0)
-		for line in f:
-			ms = re.search("(?<=^#define\sERL_NIF_MINOR_VERSION\s)[0-9]+(?=$)", line)
-			if ms:
-				ERL_NIF_MINOR_VERSION = ms.group(0)
-		# FIXME die here if ERL_NIF_MAJOR_VERSION or ERL_NIF_MINOR_VERSION is None
-		Provides += "erlang(erl_drv_version) = %s.%s" % (ERL_NIF_MAJOR_VERSION, ERL_NIF_MINOR_VERSION)
-		f.close()
+        # module erlang-erts (Erlang VM)
+        if appcontents.split(",")[1].lstrip().rstrip() == "erts":
 
-		# Add BIFs for erlang:F/A
-		Provides += ErtsBIFProvides
+            # Export DRV version
+            with open("%s/erts/emulator/beam/erl_driver.h" % BUILDDIR, 'r') as f
+                ERL_DRV_EXTENDED_MAJOR_VERSION = None
+                ERL_DRV_EXTENDED_MINOR_VERSION = None
+                for line in f:
+                    ms = re.search("(?<=^#define\sERL_DRV_EXTENDED_MAJOR_VERSION\s)[0-9]+(?=$)", line)
+                    if ms:
+                        ERL_DRV_EXTENDED_MAJOR_VERSION = ms.group(0)
+                for line in f:
+                    ms = re.search("(?<=^#define\sERL_DRV_EXTENDED_MINOR_VERSION\s)[0-9]+(?=$)", line)
+                    if ms:
+                        ERL_DRV_EXTENDED_MINOR_VERSION = ms.group(0)
+                # FIXME die here if ERL_DRV_EXTENDED_MAJOR_VERSION or ERL_DRV_EXTENDED_MINOR_VERSION is None
+                Provides += "erlang(erl_drv_version) = %s.%s" % (ERL_DRV_EXTENDED_MAJOR_VERSION, ERL_DRV_EXTENDED_MINOR_VERSION)
 
-	# module erlang-hipe
-	if appcontents.split(",")[1].lstrip().rstrip() == "hipe":
-		# Add BIFs for hipe_bifs:F/A
-		Provides += HipeBIFprovides
+            # Export NIF version
+            with open("%s/erts/emulator/beam/erl_nif.h" % BUILDDIR, 'r') as f
+                ERL_NIF_MAJOR_VERSION = None
+                ERL_NIF_MINOR_VERSION = None
+                for line in f:
+                    ms = re.search("(?<=^#define\sERL_NIF_MAJOR_VERSION\s)[0-9]+(?=$)", line)
+                    if ms:
+                        ERL_NIF_MAJOR_VERSION = ms.group(0)
+                for line in f:
+                    ms = re.search("(?<=^#define\sERL_NIF_MINOR_VERSION\s)[0-9]+(?=$)", line)
+                    if ms:
+                        ERL_NIF_MINOR_VERSION = ms.group(0)
+                # FIXME die here if ERL_NIF_MAJOR_VERSION or ERL_NIF_MINOR_VERSION is None
+                Provides += "erlang(erl_drv_version) = %s.%s" % (ERL_NIF_MAJOR_VERSION, ERL_NIF_MINOR_VERSION)
+
+            # Add BIFs for erlang:F/A
+            Provides += ErtsBIFProvides
+
+        # module erlang-hipe
+        if appcontents.split(",")[1].lstrip().rstrip() == "hipe":
+            # Add BIFs for hipe_bifs:F/A
+            Provides += HipeBIFprovides
 
 # Iterate over all BEAM-files
 beammask = re.compile(".*/ebin/.*\.beam")
