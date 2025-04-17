@@ -1,6 +1,5 @@
 -module(test).
-
--compile([export_all]).
+-export([main/0]).
 
 main() ->
 	io:format("HELLO WORLD~n"),
