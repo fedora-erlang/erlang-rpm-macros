@@ -46,7 +46,11 @@ if __name__ == "__main__":
     ts = rpm.TransactionSet()
     mi = ts.dbMatch('name', "erlang-erts")
     h = next(mi)
-    ds = dict(map(lambda x: x[0].split(" ")[1::2], rpm.ds(h, "providename")))
+    Pn = rpm.ds(h, "providename")
+    Map = map(lambda x: x[0].split(" ")[1::2], Pn)
+    # Filter out unversioned dependencies like "group(epmd)"
+    Filter = filter(lambda x: len(x) == 2, Map)
+    ds = dict(Filter)
     ErlDrvDep = "erlang(erl_drv_version) = %s" % ds['erlang(erl_drv_version)']
     ErlNifDep = "erlang(erl_nif_version) = %s" % ds['erlang(erl_nif_version)']
 
