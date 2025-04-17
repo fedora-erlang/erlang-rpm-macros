@@ -221,3 +221,11 @@ fi \
 %__erlang_drv_version %(eval \
 	rpm -q erlang-erts --provides | grep --color=no erl_drv_version \
 )
+
+# Declarative buildsystem, requires RPM 4.20+ to work
+# https://rpm-software-management.github.io/rpm/manual/buildsystem.html
+%buildsystem_rebar3_conf() %nil
+%buildsystem_rebar3_generate_buildrequires() %nil
+%buildsystem_rebar3_build() %erlang3_compile %*
+%buildsystem_rebar3_install() %erlang3_install %*
+%buildsystem_rebar3_check() %erlang3_test %*
