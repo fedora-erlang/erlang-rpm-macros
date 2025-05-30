@@ -1,0 +1,16 @@
+# This file is called macros.aaa-erlang-srpm
+# to sort alphabetically before macros.erlang.
+# When this file is installed but macros.erlang is not
+# this macro will cause the package with the real macro to be installed.
+# When macros.erlang is installed, it overrides this macro.
+# Note: This takes arbitrary options, to ease addition of new options to the real macro.
+
+# Declarative buildsystem, requires RPM 4.20+ to work
+# https://rpm-software-management.github.io/rpm/manual/buildsystem.html
+# This is the minimal implementation to be in the srpm package,
+# as required even before the BuildRequires are installed
+%buildsystem_rebar3_conf() %nil
+%buildsystem_rebar3_generate_buildrequires() %nil
+%buildsystem_rebar3_build() %nil
+%buildsystem_rebar3_install() %nil
+%buildsystem_rebar3_check() %nil
