@@ -7,7 +7,7 @@ jobs:
   coverity:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: sudo apt update
     - run: sudo apt-get install --yes erlang-nox python3-pybeam python3-pyelftools python3-rpm
     - uses: vapier/coverity-scan-action@v1
