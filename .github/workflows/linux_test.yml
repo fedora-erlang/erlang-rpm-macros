@@ -24,7 +24,7 @@ jobs:
     container: fedora:40
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       # Runs a single command using the runners shell
       - name: build and run tests
         run: |
