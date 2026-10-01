@@ -107,8 +107,8 @@ This needs `erlang-erts`, `gcc`, `make`, `python3-pybeam`,
 
 ## License
 
-The macros, the dependency generator and its tests are available under the
-[MIT](LICENSES/MIT.txt) license. The rest (CI configuration, build files,
-test fixtures and this README) is under [CC0-1.0](LICENSES/CC0-1.0.txt). The
+The macros, the dependency generator, its tests and this README are available
+under the [MIT](LICENSES/MIT.txt) license. The rest (CI configuration, build
+files and test fixtures) is under [CC0-1.0](LICENSES/CC0-1.0.txt). The
 project follows the [REUSE](https://reuse.software/) specification: see the
 SPDX headers of the files and `REUSE.toml`.
