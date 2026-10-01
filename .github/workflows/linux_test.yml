@@ -1,33 +1,28 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Testing on Linux
 
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches:
-         - '*'
+      - '*'
   pull_request:
     branches:
-         - '*'
-env:
-  DEB_DH_SHLIBDEPS_ARGS_ALL: "--dpkg-shlibdeps-params=--ignore-missing-info"
-
+      - '*'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test_all:
     runs-on: ubuntu-latest
-    container: fedora:40
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["fedora:latest", "fedora:rawhide"]
+    container: ${{ matrix.image }}
+    # Rawhide may break for reasons of its own; report it, but don't block on it
+    continue-on-error: ${{ matrix.image == 'fedora:rawhide' }}
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v7
-      # Runs a single command using the runners shell
-      - name: build and run tests
-        run: |
-            sudo dnf update -y
-            sudo dnf install -y erlang-crypto erlang-erlsyslog erlang-erts make python3-pybeam python3-pyelftools python3-rpm rpm-build
-            make check
+      - name: Install dependencies
+        run: dnf install -y erlang-erts gcc make python3-pybeam python3-pyelftools python3-rpm
+      - name: Run tests
+        run: make check
