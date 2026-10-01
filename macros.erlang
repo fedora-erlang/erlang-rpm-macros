@@ -1,17 +1,20 @@
 # handy macros for erlang-related packages
 
 %_erldir	%{_libdir}/erlang
-%_erllibdir	%(if [ "%{_target_cpu}" == "noarch" ] ; then echo %{_datadir}/erlang/lib; else echo %{_erldir}/lib; fi)
+%_erllibdir	%[ "%{_target_cpu}" == "noarch" ? "%{_datadir}/erlang/lib" : "%{_erldir}/lib" ]
 
+%__rebar3 /usr/bin/rebar3
+
+# rebar2 is no longer available; these are kept for the specs referring to them
 %__rebar /usr/bin/rebar
 %__rebar2 /usr/bin/rebar
-%__rebar3 /usr/bin/rebar3
 
 ##
 ## Rebar3 macros
 ##
 
-%rebar3_compile \
+# The environment shared by all the rebar3 macros below
+%__erlang_rebar3_env \
 	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
 	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
 	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
@@ -19,23 +22,19 @@
 	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
 	VSN="%{version}" ; export VSN ; \
 	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
-	echo "{{git, \\\"%{_builddir}/%{buildsubdir}\\\"}, \\\"%{version}\\\"}." > %{_builddir}/%{buildsubdir}/vsn.cache ; \
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
 	ERL_LIBS="%{_datadir}/erlang/lib/" ; export ERL_LIBS ; \
+%{nil}
+
+%rebar3_compile \
+	%__erlang_rebar3_env \
+	echo "{{git, \\\"%{_builddir}/%{buildsubdir}\\\"}, \\\"%{version}\\\"}." > %{_builddir}/%{buildsubdir}/vsn.cache ; \
 	%__rebar3 compile skip_deps=true -vv \
 %{nil}
 
 %rebar3_ct(C:) \
-	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
-	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
-	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
-	VSN="%{version}" ; export VSN ; \
-	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
-	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
-	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
+	%__erlang_rebar3_env \
 	%__rebar3 ct skip_deps=true -vv %{-C:-C %{-C*}} \
 %{nil}
 
@@ -48,68 +47,19 @@
 %{nil}
 
 %rebar3_eunit(C:) \
-	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
-	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
-	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
-	VSN="%{version}" ; export VSN ; \
-	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
-	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
-	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
+	%__erlang_rebar3_env \
 	%__rebar3 eunit skip_deps=true -vv %{-C:-C %{-C*}} \
 %{nil}
 
 ##
-## These are going to be deprecated (renamed to rebar2 ones)
+## Deprecated rebar2 macros. rebar2 is no longer available, so they use
+## rebar3 instead (and say so).
 ##
 
-%rebar_compile \
-	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
-	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
-	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
-	VSN="%{version}" ; export VSN ; \
-	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
-	echo "{{git, \\\"%{_builddir}/%{buildsubdir}\\\"}, \\\"%{version}\\\"}." > %{_builddir}/%{buildsubdir}/vsn.cache ; \
-	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
-	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
-	ERL_LIBS="%{_datadir}/erlang/lib/" ; export ERL_LIBS ; \
-	%__rebar compile skip_deps=true -vv \
-%{nil}
-
-%rebar_ct(C:) \
-	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
-	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
-	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
-	VSN="%{version}" ; export VSN ; \
-	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
-	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
-	%__rebar ct skip_deps=true -vv %{-C:-C %{-C*}} \
-%{nil}
-
-%rebar_doc \
-	if [ -f doc/overview.edoc ] ; then \
-		%__rebar doc -vv \
-	else \
-		echo "No 'doc/overview.edoc' file was found, so docs aren't generated." \
-	fi \
-%{nil}
-
-%rebar_eunit(C:) \
-	CFLAGS="${CFLAGS:-%optflags}" ; export CFLAGS ; \
-	CXXFLAGS="${CXXFLAGS:-%optflags}" ; export CXXFLAGS ; \
-	FFLAGS="${FFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FFLAGS ; \
-	FCFLAGS="${FCFLAGS:-%optflags%{?_fmoddir: -I%_fmoddir}}" ; export FCFLAGS ; \
-	%{?__global_ldflags:LDFLAGS="${LDFLAGS:-%__global_ldflags}" ; export LDFLAGS ;} \
-	VSN="%{version}" ; export VSN ; \
-	REBAR_VSN_CACHE_FILE="%{_builddir}/%{buildsubdir}/vsn.cache" ; export REBAR_VSN_CACHE_FILE ; \
-	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
-	%__rebar eunit skip_deps=true -vv %{-C:-C %{-C*}} \
-%{nil}
+%rebar_compile %{warn:%%rebar_compile is deprecated, use %%rebar3_compile}%rebar3_compile
+%rebar_ct(C:) %{warn:%%rebar_ct is deprecated, use %%rebar3_ct}%rebar3_ct %{-C:-C %{-C*}}
+%rebar_doc %{warn:%%rebar_doc is deprecated, use %%rebar3_doc}%rebar3_doc
+%rebar_eunit(C:) %{warn:%%rebar_eunit is deprecated, use %%rebar3_eunit}%rebar3_eunit %{-C:-C %{-C*}}
 
 #
 # More generic macros
@@ -118,23 +68,34 @@
 # Define any of these but not all at the same time
 %__erlappname %{?realname}%{?srcname}%{?erlappname}
 
-#%__erlappname %(eval \
-#	if [ "%{?realname}" != "" ] ; then \
-#		echo -n "%{realname}"
-#	elif [ "%{?srcname}" != "" ] ; then \
-#		echo -n "%{srcname}" \
-#	else \
-#		echo -n "%{erlappname}" \
-#	fi \
-#)
-#
-
 %erlang_ensure_app_src \
 	if [ ! -f src/%{__erlappname}.app.src -a ! -f src/%{__erlappname}.app -a ! -f ebin/%{__erlappname}.app ] ; then \
 		echo "{application, %{__erlappname}, [{description, \\\"%{summary}\\\"}, {vsn, \\\"%{version}\\\"}, {modules, []}]}." > src/%{__erlappname}.app.src \
 	else \
 		echo "*.app file (or *.app.src template) was found." \
 	fi \
+%{nil}
+
+# Install the application from the given ebin directory, along with its
+# include/*.hrl files and priv/*.so and priv/lib/*.so libraries
+%__erlang_install_from() \
+if [ "%{__erlappname}" = "" ] ; then \
+	echo "error: define %%realname, %%srcname or %%erlappname to install an Erlang application" >&2 \
+	exit 1 \
+fi \
+%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+if [ -f %1/%{__erlappname}.app ] ; then \
+	%{__install} -m 0644 -p %1/%{__erlappname}.app %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+fi \
+%{__install} -m 0644 -p %1/*.beam %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
+for erlincludefile in include/*.hrl ; do \
+	[ -e "$erlincludefile" ] || continue \
+	%{__install} -D -m 0644 -p "$erlincludefile" "%{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$erlincludefile" \
+done \
+for solibfile in priv/*.so priv/lib/*.so ; do \
+	[ -e "$solibfile" ] || continue \
+	%{__install} -D -m 0755 -p "$solibfile" "%{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$solibfile" \
+done \
 %{nil}
 
 ##
@@ -150,61 +111,17 @@
 	%rebar3_eunit %{-C:-C %{-C*}} \
 	%rebar3_ct %{-C:-C %{-C*}}
 
-%erlang3_install \
-if [ "%{__erlappname}" != "" ] ; then \
-	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ \
-	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
-	if [ -f _build/default/lib/%{__erlappname}/ebin/%{__erlappname}.app ] ; then \
-		%{__install} -m 0644 -p _build/default/lib/%{__erlappname}/ebin/%{__erlappname}.app %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
-	fi \
-	%{__install} -m 0644 -p _build/default/lib/%{__erlappname}/ebin/*.beam %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
-	if [ -d include/ ] ; then \
-		for erlincludefile in `ls include/*.hrl` ; do \
-			%{__install} -D -m 0644 -p $erlincludefile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$erlincludefile \
-		done \
-	fi \
-	if [ -d priv/ ] ; then \
-		for solibfile in `ls priv/*.so` ; do \
-			%{__install} -D -m 0755 -p $solibfile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$solibfile \
-		done \
-	fi \
-fi \
-%{nil}
-
+%erlang3_install %{__erlang_install_from _build/default/lib/%{__erlappname}/ebin}
 
 ##
-## These are going to be deprecated (renamed to rebar2 ones)
+## Deprecated rebar2 macros, see above. %erlang_install does not need rebar
+## and installs what was built in ./ebin.
 ##
 
-%erlang_compile \
-	%erlang_ensure_app_src \
-	%rebar_compile \
-	%rebar_doc
+%erlang_compile %{warn:%%erlang_compile is deprecated, use %%erlang3_compile}%erlang3_compile
+%erlang_test(C:) %{warn:%%erlang_test is deprecated, use %%erlang3_test}%erlang3_test %{-C:-C %{-C*}}
 
-%erlang_test(C:) \
-	%rebar_eunit %{-C:-C %{-C*}} \
-	%rebar_ct %{-C:-C %{-C*}}
-
-%erlang_install \
-if [ "%{__erlappname}" != "" ] ; then \
-	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ \
-	%{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
-	if [ -f ebin/%{__erlappname}.app ] ; then \
-		%{__install} -m 0644 -p ebin/%{__erlappname}.app %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
-	fi \
-	%{__install} -m 0644 -p ebin/*.beam %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \
-	if [ -d include/ ] ; then \
-		for erlincludefile in `ls include/*.hrl` ; do \
-			%{__install} -D -m 0644 -p $erlincludefile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$erlincludefile \
-		done \
-	fi \
-	if [ -d priv/ ] ; then \
-		for solibfile in `ls priv/*.so` ; do \
-			%{__install} -D -m 0755 -p $solibfile %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/$solibfile \
-		done \
-	fi \
-fi \
-%{nil}
+%erlang_install %{__erlang_install_from ebin}
 
 %erlang_appdir %{_erllibdir}/%{__erlappname}-%{version}
 %_erlang_appdir %erlang_appdir
