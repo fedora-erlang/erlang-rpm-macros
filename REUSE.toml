@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: © 2026 Peter Lemenkov
+# SPDX-License-Identifier: CC0-1.0
+
+version = 1
+
+[[annotations]]
+path = "README"
+SPDX-FileCopyrightText = "© 2010 Peter Lemenkov"
+SPDX-License-Identifier = "CC0-1.0"

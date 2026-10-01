@@ -1,24 +1,8 @@
 #!/usr/bin/python3
 
-# Copyright (c) 2016,2017 Peter Lemenkov <lemenkov@gmail.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-FileCopyrightText: © 2016-2026 Peter Lemenkov
+# SPDX-FileCopyrightText: erlang-rpm-macros contributors
+# SPDX-License-Identifier: MIT
 
 # RPM dependency generator for Erlang, using the multifile protocol (RPM 4.20+).
 # It reads the names of all matching files from STDIN and prints, for every
@@ -38,7 +22,7 @@ import zlib
 
 import rpm
 from elftools.elf.elffile import ELFFile
-from pybeam.schema.beam.chunks import AtU8, Atom, ExpT, ImpT
+from pybeam.schema.beam.chunks import Atom, AtU8, ExpT, ImpT
 
 ERLSHRDIR = "/usr/share/erlang/lib"
 
@@ -71,7 +55,7 @@ def atoms(chunks):
 		return AtU8.parse(chunks[b"AtU8"])
 	return Atom.parse(chunks[b"Atom"])
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def exports(filename):
 	"""The set of (Function, Arity) exported by a module."""
 	chunks = read_chunks(filename, (b"AtU8", b"Atom", b"ExpT"))
@@ -84,9 +68,9 @@ def imports(filename):
 	a = atoms(chunks)
 	return {(a[e.module - 1], a[e.function - 1], e.arity) for e in ImpT.parse(chunks[b"ImpT"]).entry}
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def find_module(pattern, module):
-	beams = sorted(glob.glob("%s/%s.beam" % (pattern, module)))
+	beams = sorted(glob.glob(f"{pattern}/{module}.beam"))
 	return beams[0] if beams else None
 
 def provider(pattern, mfa):
@@ -97,11 +81,11 @@ def provider(pattern, mfa):
 	beam = find_module(pattern, m)
 	return beam if beam and (f, a) in exports(beam) else None
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def transaction_set():
 	return rpm.TransactionSet()
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def owners(filename):
 	"""(Name, Arch) of the installed packages which own a file."""
 	return tuple((h[rpm.RPMTAG_NAME], h[rpm.RPMTAG_ARCH])
@@ -118,12 +102,13 @@ def beam_requires(isa, libdirs, filename):
 	for mfa in sorted(imports(filename)):
 		if provider(local, mfa):
 			continue
-		beam = next((b for b in (provider("%s/*/ebin" % d, mfa) for d in libdirs) if b), None)
+		beam = next((b for b in (provider(f"{d}/*/ebin", mfa) for d in libdirs) if b), None)
 		if beam:
 			modules.add(beam)
 		else:
 			# Not fatal: the function might be loaded at runtime from elsewhere
-			print("ERROR: Can't find %s:%s/%d while processing '%s'" % (mfa + (filename,)), file=sys.stderr)
+			(m, f, a) = mfa
+			print(f"ERROR: Can't find {m}:{f}/{a} while processing '{filename}'", file=sys.stderr)
 
 	requires = set()
 	for beam in modules:
@@ -132,16 +117,16 @@ def beam_requires(isa, libdirs, filename):
 			if isa == "noarch" or arch == "noarch":
 				requires.add(name)
 			else:
-				requires.add("%s(%s)" % (name, isa))
+				requires.add(f"{name}({isa})")
 	return sorted(requires)
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def provided_version(capability):
 	"""'capability = version' as provided by an installed package, or None."""
 	for h in transaction_set().dbMatch("providename", capability):
 		for dep in rpm.ds(h, "providename"):
 			if dep.N() == capability and dep.EVR():
-				return "%s = %s" % (capability, dep.EVR())
+				return f"{capability} = {dep.EVR()}"
 	return None
 
 # Entry points of NIF and driver libraries, and the API versions they need

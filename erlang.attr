@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2016-2026 Peter Lemenkov
+# SPDX-License-Identifier: MIT
+
 %__erlang_requires %{_rpmconfigdir}/erlang-find-requires -i %{?_isa}
 %__erlang_protocol multifile
 %__erlang_magic	^Erlang BEAM file$

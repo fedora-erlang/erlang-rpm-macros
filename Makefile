@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2017-2026 Peter Lemenkov
+# SPDX-License-Identifier: CC0-1.0
+
 CC ?= cc
 
 TEST_FILES = test.beam test_nif.so test_drv.so test_nodynsym.so

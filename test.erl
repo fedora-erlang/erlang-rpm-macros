@@ -1,3 +1,6 @@
+% SPDX-FileCopyrightText: © 2017-2026 Peter Lemenkov
+% SPDX-License-Identifier: CC0-1.0
+
 -module(test).
 -export([main/0]).
 
