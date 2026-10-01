@@ -6,3 +6,4 @@
 *.rej
 *~
 __pycache__/
+*.so
