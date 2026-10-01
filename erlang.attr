@@ -1,3 +1,4 @@
 %__erlang_requires %{_rpmconfigdir}/erlang-find-requires -i %{?_isa}
+%__erlang_protocol multifile
 %__erlang_magic	^Erlang BEAM file$
-%__erlang_path	^/usr/lib(64)?/erlang/lib/.*/(ebin/.*\\.(beam|app)|priv/.*\\.so)$
+%__erlang_path	^/usr/lib(64)?/erlang/lib/.*/(ebin/.*\\.beam|priv/.*\\.so)$
