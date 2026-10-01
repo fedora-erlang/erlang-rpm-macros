@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: © 2025-2026 Peter Lemenkov
+# SPDX-License-Identifier: MIT
+
 # This file is called macros.aaa-erlang-srpm
 # to sort alphabetically before macros.erlang.
 # When this file is installed but macros.erlang is not

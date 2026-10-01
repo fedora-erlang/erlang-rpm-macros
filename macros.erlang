@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2010-2026 Peter Lemenkov
+# SPDX-FileCopyrightText: erlang-rpm-macros contributors
+# SPDX-License-Identifier: MIT
+
 # handy macros for erlang-related packages
 
 %_erldir	%{_libdir}/erlang

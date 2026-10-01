@@ -1,10 +1,14 @@
+# SPDX-FileCopyrightText: © 2017-2026 Peter Lemenkov
+# SPDX-License-Identifier: MIT
+
 import glob
 import importlib.util
 import os
-import rpm
 import subprocess
 import sys
 import unittest
+
+import rpm
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "erlang-find-requires.py")
@@ -25,7 +29,7 @@ def erts_provides(capability):
     h = next(ts.dbMatch("name", "erlang-erts"))
     for dep in rpm.ds(h, "providename"):
         if dep.N() == capability:
-            return "%s = %s" % (capability, dep.EVR())
+            return f"{capability} = {dep.EVR()}"
     return None
 
 class TestAllMethods(unittest.TestCase):
@@ -41,9 +45,9 @@ class TestAllMethods(unittest.TestCase):
     def test_provider(self):
         # This test requires erlang-erts RPM package installed
         filepath = glob.glob('/usr/lib*/erlang/lib/erts-*/ebin/erlang.beam')[0]
-        self.assertEqual(M.provider("%s/*/ebin" % M.erlang_libdir(), ('erlang', 'load_nif', 2)), filepath)
-        self.assertIsNone(M.provider("%s/*/ebin" % M.erlang_libdir(), ('erlang', 'no_such_function', 0)))
-        self.assertIsNone(M.provider("%s/*/ebin" % M.erlang_libdir(), ('no_such_module', 'f', 0)))
+        self.assertEqual(M.provider(f"{M.erlang_libdir()}/*/ebin", ('erlang', 'load_nif', 2)), filepath)
+        self.assertIsNone(M.provider(f"{M.erlang_libdir()}/*/ebin", ('erlang', 'no_such_function', 0)))
+        self.assertIsNone(M.provider(f"{M.erlang_libdir()}/*/ebin", ('no_such_module', 'f', 0)))
 
     def test_so_requires_nif(self):
         self.assertEqual(M.so_requires(TEST_NIF), [erts_provides("erlang(erl_nif_version)")])

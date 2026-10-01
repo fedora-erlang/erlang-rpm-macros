@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: © 2026 Peter Lemenkov
+# SPDX-License-Identifier: CC0-1.0
+
+name: Lint
+on: [push, pull_request]
+permissions: {}
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/ruff-action@v4.1.0
+        with:
+          # Bump deliberately: new releases may add checks to the selected rules
+          version: "0.16.8"
+  reuse:
+    name: REUSE compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: fsfe/reuse-action@v6

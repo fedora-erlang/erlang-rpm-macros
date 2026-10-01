@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: © 2026 Peter Lemenkov
+# SPDX-License-Identifier: CC0-1.0
+
+# RPM 4.20+ means Fedora 41+ and Python 3.12+
+target-version = "py312"
+
+[lint]
+select = [
+	"E4", "E7", "E9", # pycodestyle errors
+	"W",              # pycodestyle warnings
+	"F",              # pyflakes
+	"B",              # bugbear
+	"I",              # isort
+	"UP",             # pyupgrade
+]
+# The generator is indented with tabs
+ignore = ["W191"]
