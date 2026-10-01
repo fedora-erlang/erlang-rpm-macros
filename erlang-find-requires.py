@@ -20,175 +20,164 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# This script reads filenames from STDIN and outputs any relevant requires
-# information that needs to be included in the package.
+# RPM dependency generator for Erlang, using the multifile protocol (RPM 4.20+).
+# It reads the names of all matching files from STDIN and prints, for every
+# file which has any, a ";<filename>" line followed by its requires:
+#
+# * for BEAM files, the packages providing the functions the module calls,
+#   except those provided by the package itself;
+# * for NIF and driver libraries, the NIF and driver API versions.
 
 import argparse
+import functools
 import glob
-import pybeam
-import re
-import rpm
+import os
+import struct
 import sys
+import zlib
 
+import rpm
 from elftools.elf.elffile import ELFFile
+from pybeam.schema.beam.chunks import AtU8, Atom, ExpT, ImpT
 
-# Globals
-ERLLIBDIR = ""
 ERLSHRDIR = "/usr/share/erlang/lib"
 
-# fastest sort + uniq
-# see http://www.peterbe.com/plog/uniqifiers-benchmark
-def sort_and_uniq(List):
-	return list(set(List))
+def erlang_libdir():
+	# /usr/lib64/erlang/lib or /usr/lib/erlang/lib, depending on the arch
+	erts = sorted(glob.glob("/usr/lib*/erlang/lib/erts-*/ebin/erts.app"))
+	return os.path.dirname(os.path.dirname(os.path.dirname(erts[0]))) if erts else None
 
-def check_for_mfa(Path, Dict, MFA):
-	(M, F, A) = MFA
-	Provides = []
-        #  First we try to find a (list of) module(s)...
-	Beams = glob.glob("%s/%s.beam" % (Path, M))
-	if Beams != []:
-		# ...and we'll use a first match, e.g. Beams[0] (as Erlang VM will do).
-                # But before parsing module let's check if we already parsed
-                # it, and stored the results in a dict.
-		Provides = Dict.get(Beams[0])
-		if not Provides:
-			# No, we have to parse beam-file for the first time.
-			b = pybeam.BeamFile(Beams[0])
-			Provides = b.exports
-			# Note - there are two special cases:
-			# * eunit_test - add "erlang(eunit_test:nonexisting_function/0)"
-			# * wx - add "erlang(demo:start/0)"
-			Dict[Beams[0]] = Provides
+def read_chunks(filename, names):
+	"""Return the raw contents of the given chunks of a BEAM file.
 
-                # Now Provides contains module's M export table. Let's check if
-                # this module M actually exports a required function F with
-                # arity A.
-		for (F0, A0, Idx) in Provides:
-			if F0 == F and A0 == A:
-				# Always return first match. See comment above.
-				return Beams[0]
+	Only the chunks needed are decoded afterwards, which is much faster
+	than letting pybeam.BeamFile parse the whole file."""
+	with open(filename, "rb") as f:
+		data = f.read()
+	if data[:2] == b'\x1f\x8b':
+		data = zlib.decompress(data, 31)
+	chunks = {}
+	pos = 12
+	while pos + 8 <= len(data):
+		name = data[pos:pos + 4]
+		size = struct.unpack(">I", data[pos + 4:pos + 8])[0]
+		if name in names:
+			chunks[name] = data[pos + 8:pos + 8 + size]
+		pos += 8 + ((size + 3) & ~3)
+	return chunks
 
+def atoms(chunks):
+	if b"AtU8" in chunks:
+		return AtU8.parse(chunks[b"AtU8"])
+	return Atom.parse(chunks[b"Atom"])
+
+@functools.lru_cache(maxsize=None)
+def exports(filename):
+	"""The set of (Function, Arity) exported by a module."""
+	chunks = read_chunks(filename, (b"AtU8", b"Atom", b"ExpT"))
+	a = atoms(chunks)
+	return frozenset((a[e.function - 1], e.arity) for e in ExpT.parse(chunks[b"ExpT"]).entry)
+
+def imports(filename):
+	"""The set of (Module, Function, Arity) called by a module."""
+	chunks = read_chunks(filename, (b"AtU8", b"Atom", b"ImpT"))
+	a = atoms(chunks)
+	return {(a[e.module - 1], a[e.function - 1], e.arity) for e in ImpT.parse(chunks[b"ImpT"]).entry}
+
+@functools.lru_cache(maxsize=None)
+def find_module(pattern, module):
+	beams = sorted(glob.glob("%s/%s.beam" % (pattern, module)))
+	return beams[0] if beams else None
+
+def provider(pattern, mfa):
+	"""The BEAM file under pattern which exports mfa, or None.
+
+	Like the Erlang VM, only the first module with the right name counts."""
+	(m, f, a) = mfa
+	beam = find_module(pattern, m)
+	return beam if beam and (f, a) in exports(beam) else None
+
+@functools.lru_cache(maxsize=None)
+def transaction_set():
+	return rpm.TransactionSet()
+
+@functools.lru_cache(maxsize=None)
+def owners(filename):
+	"""(Name, Arch) of the installed packages which own a file."""
+	return tuple((h[rpm.RPMTAG_NAME], h[rpm.RPMTAG_ARCH])
+		for h in transaction_set().dbMatch("basenames", filename))
+
+def beam_requires(isa, libdirs, filename):
+	# The directory of the BEAM file could be:
+	# * '$BUILDROOT/usr/share/elixir/1.4.2/lib/mix/ebin'
+	# * '$BUILDROOT/usr/lib/erlang/lib/y-1.0/ebin'
+	# * '$BUILDROOT/usr/lib64/erlang/lib/emmap-0/ebin'
+	# so the applications of the package itself are found at ../../*/ebin.
+	local = "/".join(filename.split("/")[:-3] + ["*", "ebin"])
+	modules = set()
+	for mfa in sorted(imports(filename)):
+		if provider(local, mfa):
+			continue
+		beam = next((b for b in (provider("%s/*/ebin" % d, mfa) for d in libdirs) if b), None)
+		if beam:
+			modules.add(beam)
+		else:
+			# Not fatal: the function might be loaded at runtime from elsewhere
+			print("ERROR: Can't find %s:%s/%d while processing '%s'" % (mfa + (filename,)), file=sys.stderr)
+
+	requires = set()
+	for beam in modules:
+		for (name, arch) in owners(beam):
+			# isa is "noarch" when building a noarch package
+			if isa == "noarch" or arch == "noarch":
+				requires.add(name)
+			else:
+				requires.add("%s(%s)" % (name, isa))
+	return sorted(requires)
+
+@functools.lru_cache(maxsize=None)
+def provided_version(capability):
+	"""'capability = version' as provided by an installed package, or None."""
+	for h in transaction_set().dbMatch("providename", capability):
+		for dep in rpm.ds(h, "providename"):
+			if dep.N() == capability and dep.EVR():
+				return "%s = %s" % (capability, dep.EVR())
 	return None
 
-def inspect_so_library(library, export_name, dependency_name):
-    with open(library, 'rb') as f:
-        elffile = ELFFile(f)
-        dynsym = elffile.get_section_by_name('.dynsym')
-        for sym in dynsym.iter_symbols():
-            if sym.name == export_name:
-                ts = rpm.TransactionSet()
-                mi = ts.dbMatch('providename', dependency_name)
-                h = next(mi)
-                Pn = rpm.ds(h, "providename")
-                Map = map(lambda x: x[0].split(" ")[1::2], Pn)
-                # Filter out unversioned dependencies like "group(epmd)"
-                Filter = filter(lambda x: len(x) == 2, Map)
-                ds = dict(Filter)
-                if dependency_name in ds:
-                    f.close()
-                    return "%s = %s" % (dependency_name, ds[dependency_name])
+# Entry points of NIF and driver libraries, and the API versions they need
+SO_ENTRY_POINTS = (
+	("nif_init", "erlang(erl_nif_version)"),
+	("driver_init", "erlang(erl_drv_version)"),
+)
 
-        f.close()
-        return None
+def so_requires(filename):
+	with open(filename, "rb") as f:
+		dynsym = ELFFile(f).get_section_by_name(".dynsym")
+		if dynsym is None:
+			return []
+		found = [cap for (sym, cap) in SO_ENTRY_POINTS if dynsym.get_symbol_by_name(sym)]
+	return [dep for dep in map(provided_version, found) if dep]
 
+def main(argv=None):
+	parser = argparse.ArgumentParser(description="RPM requires generator for Erlang")
+	parser.add_argument("-i", "--isa", nargs="?", default="",
+		help="the package ISA as in %%{_isa}, e.g. (x86-64); empty for noarch")
+	args = parser.parse_args(argv)
+	isa = (args.isa or "").strip("()") or "noarch"
+	libdirs = [d for d in (erlang_libdir(), ERLSHRDIR) if d]
 
-def inspect_beam_file(ISA, filename):
-    b = pybeam.BeamFile(filename)
-    # [(M,F,A),...]
-    BeamMFARequires = sort_and_uniq(b.imports)
-
-    Dict = {}
-    # Filter out locally provided Requires
-
-    # dirname(filename) could be:
-    # * '$BUILDROOT/elixir-1.4.2-1.fc26.noarch/usr/share/elixir/1.4.2/lib/mix/ebin'
-    # * '$BUILDROOT/erlang-y-combinator-1.0-1.fc26.noarch/usr/lib/erlang/lib/y-1.0/ebin'
-    # * '$BUILDROOT/erlang-emmap-0-0.18.git05ae1bb.fc26.x86_64/usr/lib64/erlang/lib/emmap-0/ebin'
-    # WARNING - this won't work for files from ERLLIBDIR
-    BeamMFARequires = list(filter(lambda X: check_for_mfa('/'.join(filename.split('/')[:-3] + ["*", "ebin"]), Dict, X) is None, BeamMFARequires))
-
-    Dict = {}
-    # TODO let's find modules which provides these requires
-    for (M,F,A) in BeamMFARequires:
-        # FIXME check in noarch Erlang dir also
-        if not check_for_mfa("%s/*/ebin" % ERLLIBDIR, Dict, (M, F, A)) and not check_for_mfa("%s/*/ebin" % ERLSHRDIR, Dict, (M, F, A)):
-            print("ERROR: Cant find %s:%s/%d while processing '%s'" % (M,F,A, filename), file=sys.stderr)
-            # We shouldn't stop further processing here - let pretend this is just a warning
-            #exit(1)
-
-    BeamModRequires = sort_and_uniq(Dict.keys())
-
-    # let's find RPM-packets to which these modules belongs
-    # We return more than one match since there could be situations where the same
-    # object belongs to more than one package.
-    ts = rpm.TransactionSet()
-    RPMRequires = [item for sublist in map(
-            lambda x: [(h[rpm.RPMTAG_NAME], h[rpm.RPMTAG_ARCH]) for h in ts.dbMatch('basenames', x)],
-            BeamModRequires
-        ) for item in sublist]
-
-    Ret = []
-    for (req, PkgISA) in sort_and_uniq(RPMRequires):
-        # ISA == "" if rpmbuild invoked with --target noarch
-        if ISA == "noarch" or ISA == "" or PkgISA == "noarch":
-            # noarch package - we don't care about arch dependency
-            # erlang-erts erlang-kernel ...
-            Ret += ["%s" % req]
-        else:
-            # arch-dependent package - we will use exact arch of adependent packages
-            # erlang-erts(x86-64) erlang-kernel(x86-64) ...
-            Ret += ["%s(%s)" % (req, ISA)]
-
-    return sorted(Ret)
+	for line in sys.stdin:
+		filename = line.rstrip("\n")
+		if filename.endswith(".beam"):
+			requires = beam_requires(isa, libdirs, filename)
+		elif filename.endswith(".so"):
+			requires = so_requires(filename)
+		else:
+			continue
+		if requires:
+			print(";" + filename)
+			for dep in requires:
+				print(dep)
 
 if __name__ == "__main__":
-
-    ##
-    ## Begin
-    ##
-
-    parser = argparse.ArgumentParser()
-
-    # Get package's ISA
-    parser.add_argument("-i", "--isa", nargs='?')
-    args = parser.parse_args()
-
-    if args.isa:
-        # Convert "(x86-64)" to "x86-64"
-        ISA=args.isa[1:-1]
-    else:
-        ISA="noarch"
-
-    # Get the main Erlang directory
-    prog = re.compile("/usr/lib(64)?/erlang/lib")
-    ERLLIBDIR = prog.match(glob.glob("/usr/lib*/erlang/lib/erts-*/ebin/erts.app")[0])[0]
-
-    # All the Erlang files matched by erlang.attr specification from the
-    # package. Modern RPM version passes files one by one (a list
-    # containing one filename prefixed by '\n'. We do not support older RPM
-    # versions.
-    #
-    # We read filename as a list with a single element from stdin, get the
-    # first element in the list, strip off the prefix, and pass it into the
-    # main function.
-    filename = sys.stdin.readlines()[0].rstrip('\n')
-
-    Ret = []
-    if filename.endswith(".beam"):
-        Ret = inspect_beam_file(ISA, filename)
-
-    elif filename.endswith(".so"):
-        Ret += [inspect_so_library(filename, 'nif_init', 'erlang(erl_nif_version)')]
-        Ret += [inspect_so_library(filename, 'driver_init', 'erlang(erl_drv_version)')]
-
-    elif filename.endswith(".app"):
-        # TODO we don't know what to do with *.app files yet
-        pass
-
-    else:
-        # Unknown type
-        pass
-
-    for StringDependency in Ret:
-        if StringDependency != None:
-            print(StringDependency)
+	main()
