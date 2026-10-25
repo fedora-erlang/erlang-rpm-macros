@@ -29,6 +29,7 @@
 	REBAR_DEPS_PREFER_LIBS="TRUE" ; export REBAR_DEPS_PREFER_LIBS ; \
 	IGNORE_MISSING_DEPS="TRUE" ; export IGNORE_MISSING_DEPS ; \
 	ERL_LIBS="%{_datadir}/erlang/lib/" ; export ERL_LIBS ; \
+	REBAR="%__rebar3" ; export REBAR ; \
 %{nil}
 
 %rebar3_compile \
