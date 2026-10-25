@@ -60,6 +60,23 @@ To skip the EUnit tests or the Common Test suites, pass `-e` or `-c` to the
 BuildOption(check): -c
 ```
 
+### Generated BuildRequires
+
+`%erlang_buildrequires` reads `rebar.config` (and `rebar.config.script`, as
+rebar3 does) of the application and of any applications under `apps/`, and
+prints a BuildRequires for every dependency and build plugin in the form
+`(erlang(NAME) or erlang-NAME)`. It is opt-in: add a `%generate_buildrequires`
+section, in a declarative spec as well:
+
+```spec
+%generate_buildrequires
+%erlang_buildrequires -t -x eqwalizer_support
+```
+
+`-t` adds the dependencies of the `test` profile, and `-x NAME,...` skips
+dependencies which aren't packaged (it may be repeated). Development plugins
+(`project_plugins`) and `raw` dependencies are skipped.
+
 ### Classic macros
 
 ```spec
@@ -77,6 +94,7 @@ BuildOption(check): -c
 |---|---|
 | `%erlang3_compile` | Creates a minimal `src/APP.app.src` if the application has no `.app` file or template, then runs `%rebar3_compile` and `%rebar3_doc` |
 | `%erlang3_test` | Runs `%rebar3_eunit` and `%rebar3_ct`; `-e` skips the former, `-c` the latter |
+| `%erlang_buildrequires` | Prints the BuildRequires of `rebar.config` for `%generate_buildrequires`, see above |
 | `%erlang3_install` | Installs the `.app` file and BEAM modules built by rebar3, `include/*.hrl`, and `priv/*.so` and `priv/lib/*.so` into `%{erlang_appdir}` |
 | `%erlang_install` | The same, for applications built into `./ebin` without rebar3 |
 | `%rebar3_compile`, `%rebar3_eunit`, `%rebar3_ct`, `%rebar3_doc` | Run the corresponding rebar3 command with the distribution build flags |

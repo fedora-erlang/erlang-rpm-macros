@@ -121,6 +121,12 @@ done \
 
 %erlang3_install %{__erlang_install_from _build/default/lib/%{__erlappname}/ebin}
 
+# For %generate_buildrequires: the dependencies and build plugins in
+# rebar.config, as "(erlang(NAME) or erlang-NAME)". -t adds the test profile
+# dependencies, -x NAME,... skips the given ones and may be repeated.
+%__erlang_buildrequires %{_rpmconfigdir}/erlang-buildrequires
+%erlang_buildrequires(tx:) %{__erlang_buildrequires} %{**}
+
 ##
 ## Deprecated rebar2 macros, see above. %erlang_install does not need rebar
 ## and installs what was built in ./ebin.

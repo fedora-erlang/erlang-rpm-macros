@@ -18,6 +18,7 @@ spec = importlib.util.spec_from_file_location("erlang_find_requires", SCRIPT)
 M = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(M)
 
+BUILDREQUIRES = os.path.join(HERE, "erlang-buildrequires.escript")
 PROVIDES = os.path.join(HERE, "erlang-find-provides.py")
 spec = importlib.util.spec_from_file_location("erlang_find_provides", PROVIDES)
 P = importlib.util.module_from_spec(spec)
@@ -117,6 +118,48 @@ class TestAllMethods(unittest.TestCase):
         out = subprocess.run([sys.executable, PROVIDES], input="".join(f + "\n" for f in [TEST_BEAM, app]),
             capture_output=True, text=True, check=True).stdout
         self.assertEqual(out.splitlines(), [";" + app, f"erlang(stdlib) = {vsn}"])
+
+    def buildrequires(self, files, *args):
+        """Run the BuildRequires generator in a project made of the given files."""
+        with tempfile.TemporaryDirectory() as d:
+            for (name, text) in files.items():
+                os.makedirs(os.path.dirname(os.path.join(d, name)), exist_ok=True)
+                with open(os.path.join(d, name), "w") as f:
+                    f.write(text)
+            return subprocess.run(["escript", BUILDREQUIRES, *args], cwd=d, capture_output=True, text=True)
+
+    def test_buildrequires(self):
+        config = """
+            {deps, [jsx, {cowboy, "2.10.0"}, {lager, {git, "https://example.com/lager", {tag, "3.9.2"}}},
+                    {meck, ".*", {git, "https://example.com/meck"}, [raw]}]}.
+            {plugins, [pc]}.
+            {project_plugins, [rebar3_hex]}.
+            {profiles, [{test, [{deps, [proper]}]}]}.
+        """
+        out = self.buildrequires({"rebar.config": config})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertEqual(out.stdout.splitlines(), [f"(erlang({n}) or erlang-{n})" for n in ["cowboy", "jsx", "lager", "pc"]])
+        out = self.buildrequires({"rebar.config": config}, "-t", "-x", "cowboy", "-x", "jsx,pc")
+        self.assertEqual(out.stdout.splitlines(), [f"(erlang({n}) or erlang-{n})" for n in ["lager", "proper"]])
+
+    def test_buildrequires_script_and_umbrella(self):
+        files = {
+            "rebar.config": "{deps, [jsx]}.\n",
+            "rebar.config.script": "lists:keystore(deps, 1, CONFIG, {deps, [recon | proplists:get_value(deps, CONFIG)]}).\n",
+            "apps/core/rebar.config": "{deps, [getopt, web]}.\n",
+            "apps/web/rebar.config": "{deps, [core, cowboy]}.\n",
+        }
+        out = self.buildrequires(files)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        # The applications of an umbrella project aren't dependencies
+        self.assertEqual(out.stdout.splitlines(), [f"(erlang({n}) or erlang-{n})" for n in ["cowboy", "getopt", "jsx", "recon"]])
+
+    def test_buildrequires_errors(self):
+        self.assertEqual(self.buildrequires({}).stdout, "")
+        out = self.buildrequires({"rebar.config": "{deps, [jsx]\n"})
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("rebar.config", out.stderr)
+        self.assertEqual(self.buildrequires({}, "-q").returncode, 1)
 
     def test_check_for_absense_of_buildarch_macro(self):
         self.assertEqual(rpm.expandMacro("%{buildarch}"), "%{buildarch}")
