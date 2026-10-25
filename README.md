@@ -89,7 +89,15 @@ no longer available, so they print a warning and use rebar3 instead.
 
 ## Automatic dependencies
 
-`erlang.attr` hooks `erlang-find-requires` into rpmbuild:
+`erlang.attr` hooks `erlang-find-provides` and `erlang-find-requires` into
+rpmbuild.
+
+Every installed **application** (`APP/ebin/NAME.app`) provides
+`erlang(NAME) = VSN`, `VSN` being the `vsn` of the application, e.g.
+`erlang(jsx) = 3.1.0`. A `-` in the version becomes `~`, so pre-releases sort
+before the release as they do in semantic versioning.
+
+The requires are:
 
 * For a **BEAM module**, every imported function is looked up in the
   installed Erlang libraries (`%{_libdir}/erlang/lib` and
@@ -102,7 +110,7 @@ no longer available, so they print a warning and use rebar3 instead.
   `driver_init`), the NIF or driver API version of the installed Erlang runtime
   becomes a requirement, e.g. `erlang(erl_nif_version) = 2.17`.
 
-The generator only sees what is installed in the build environment, so
+The requires generator only sees what is installed in the build environment, so
 everything an application calls has to be in its `BuildRequires:`.
 
 ## Testing

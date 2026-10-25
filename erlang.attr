@@ -2,6 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 %__erlang_requires %{_rpmconfigdir}/erlang-find-requires -i %{?_isa}
+%__erlang_provides %{_rpmconfigdir}/erlang-find-provides
 %__erlang_protocol multifile
 %__erlang_magic	^Erlang BEAM file$
-%__erlang_path	^/usr/lib(64)?/erlang/lib/.*/(ebin/.*\\.beam|priv/.*\\.so)$
+# BEAM files are also matched by their magic wherever they are, so only the
+# application resource files of noarch packages need /usr/share here
+%__erlang_path	^(/usr/lib(64)?/erlang/lib/.*/(ebin/.*\\.beam|priv/.*\\.so)|/usr/(lib(64)?|share)/erlang/lib/[^/]+/ebin/[^/]+\\.app)$

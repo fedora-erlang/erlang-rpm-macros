@@ -6,6 +6,7 @@ import importlib.util
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 import rpm
@@ -16,6 +17,11 @@ SCRIPT = os.path.join(HERE, "erlang-find-requires.py")
 spec = importlib.util.spec_from_file_location("erlang_find_requires", SCRIPT)
 M = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(M)
+
+PROVIDES = os.path.join(HERE, "erlang-find-provides.py")
+spec = importlib.util.spec_from_file_location("erlang_find_provides", PROVIDES)
+P = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(P)
 
 LIBDIRS = [M.erlang_libdir(), M.ERLSHRDIR]
 TEST_BEAM = os.path.join(HERE, "test.beam")
@@ -81,6 +87,36 @@ class TestAllMethods(unittest.TestCase):
         out = subprocess.run([sys.executable, SCRIPT, "-i"], input=TEST_BEAM + "\n",
             capture_output=True, text=True, check=True).stdout
         self.assertEqual(out.splitlines(), [";" + TEST_BEAM, 'erlang-erts', 'erlang-kernel', 'erlang-stdlib'])
+
+    def test_rpm_version(self):
+        self.assertEqual(P.rpm_version("1.2.3"), "1.2.3")
+        self.assertEqual(P.rpm_version("1.0.0-rc.1"), "1.0.0~rc.1")
+        self.assertEqual(P.rpm_version("2.0+build.5"), "2.0+build.5")
+        self.assertEqual(P.rpm_version("3.0 beta"), "3.0_beta")
+
+    def test_app_provides(self):
+        with tempfile.TemporaryDirectory() as d:
+            ebin = os.path.join(d, "usr/share/erlang/lib/foo-1.2.3/ebin")
+            os.makedirs(ebin)
+            app = os.path.join(ebin, "foo.app")
+            with open(app, "w") as f:
+                f.write('{application,foo,\n    [{description,"Foo"},\n     {vsn,"1.2.3-rc1"},\n     {modules,[foo]}]}.\n')
+            self.assertEqual(P.app_provides(app), ["erlang(foo) = 1.2.3~rc1"])
+            novsn = os.path.join(ebin, "bar.app")
+            with open(novsn, "w") as f:
+                f.write("{application, bar, [{modules, []}]}.\n")
+            self.assertEqual(P.app_provides(novsn), ["erlang(bar)"])
+            # Only APP/ebin/NAME.app files are application resource files
+            self.assertEqual(P.app_provides(os.path.join(d, "foo.app")), [])
+            self.assertEqual(P.app_provides(os.path.join(ebin, "foo.beam")), [])
+
+    def test_provides_multifile(self):
+        # Every installed application provides erlang(NAME) = VSN
+        app = sorted(glob.glob('/usr/lib*/erlang/lib/stdlib-*/ebin/stdlib.app'))[0]
+        vsn = os.path.basename(os.path.dirname(os.path.dirname(app)))[len("stdlib-"):]
+        out = subprocess.run([sys.executable, PROVIDES], input="".join(f + "\n" for f in [TEST_BEAM, app]),
+            capture_output=True, text=True, check=True).stdout
+        self.assertEqual(out.splitlines(), [";" + app, f"erlang(stdlib) = {vsn}"])
 
     def test_check_for_absense_of_buildarch_macro(self):
         self.assertEqual(rpm.expandMacro("%{buildarch}"), "%{buildarch}")
