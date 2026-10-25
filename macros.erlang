@@ -70,8 +70,10 @@
 # More generic macros
 #
 
-# Define any of these but not all at the same time
-%__erlappname %{?realname}%{?srcname}%{?erlappname}
+# The application name: %realname, %srcname or %erlappname if the spec
+# defines one (only one of them), otherwise the package name without its
+# "erlang-" prefix
+%__erlappname %{?realname}%{?srcname}%{?erlappname}%{!?realname:%{!?srcname:%{!?erlappname:%[ "%{sub %{?name} 1 7}" == "erlang-" ? "%{sub %{?name} 8}" : "" ]}}}
 
 %erlang_ensure_app_src \
 	if [ ! -f src/%{__erlappname}.app.src -a ! -f src/%{__erlappname}.app -a ! -f ebin/%{__erlappname}.app ] ; then \
@@ -85,7 +87,7 @@
 # include/*.hrl files and priv/*.so and priv/lib/*.so libraries
 %__erlang_install_from() \
 if [ "%{__erlappname}" = "" ] ; then \
-	echo "error: define %%realname, %%srcname or %%erlappname to install an Erlang application" >&2 \
+	echo "error: name the package erlang-APP, or define %%realname, %%srcname or %%erlappname, to install an Erlang application" >&2 \
 	exit 1 \
 fi \
 %{__mkdir} -p %{buildroot}%{_erllibdir}/%{__erlappname}-%{version}/ebin/ \

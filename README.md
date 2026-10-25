@@ -23,7 +23,9 @@ applications in Fedora.
 ## Usage
 
 The application name is taken from whichever of `%realname`, `%srcname` or
-`%erlappname` the spec defines (define only one of them).
+`%erlappname` the spec defines (define only one of them). If none of them is
+defined, it is the package name without its `erlang-` prefix, so
+`Name: erlang-foo` builds and installs the application `foo`.
 
 ### Declarative build system
 
