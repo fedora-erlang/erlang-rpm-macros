@@ -51,6 +51,13 @@ Foo application for Erlang.
 %autochangelog
 ```
 
+To skip the EUnit tests or the Common Test suites, pass `-e` or `-c` to the
+`%check` section:
+
+```spec
+BuildOption(check): -c
+```
+
 ### Classic macros
 
 ```spec
@@ -67,7 +74,7 @@ Foo application for Erlang.
 | Macro | What it does |
 |---|---|
 | `%erlang3_compile` | Creates a minimal `src/APP.app.src` if the application has no `.app` file or template, then runs `%rebar3_compile` and `%rebar3_doc` |
-| `%erlang3_test` | Runs `%rebar3_eunit` and `%rebar3_ct` |
+| `%erlang3_test` | Runs `%rebar3_eunit` and `%rebar3_ct`; `-e` skips the former, `-c` the latter |
 | `%erlang3_install` | Installs the `.app` file and BEAM modules built by rebar3, `include/*.hrl`, and `priv/*.so` and `priv/lib/*.so` into `%{erlang_appdir}` |
 | `%erlang_install` | The same, for applications built into `./ebin` without rebar3 |
 | `%rebar3_compile`, `%rebar3_eunit`, `%rebar3_ct`, `%rebar3_doc` | Run the corresponding rebar3 command with the distribution build flags |

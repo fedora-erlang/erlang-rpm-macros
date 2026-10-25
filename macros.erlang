@@ -112,9 +112,10 @@ done \
 	%rebar3_compile \
 	%rebar3_doc
 
-%erlang3_test(C:) \
-	%rebar3_eunit %{-C:-C %{-C*}} \
-	%rebar3_ct %{-C:-C %{-C*}}
+# -e skips the EUnit tests, -c skips the Common Test suites
+%erlang3_test(C:ec) \
+	%{!-e:%rebar3_eunit %{-C:-C %{-C*}}} \
+	%{!-c:%rebar3_ct %{-C:-C %{-C*}}}
 
 %erlang3_install %{__erlang_install_from _build/default/lib/%{__erlappname}/ebin}
 
