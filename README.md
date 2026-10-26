@@ -121,9 +121,10 @@ The requires are:
   installed Erlang libraries (`%{_libdir}/erlang/lib` and
   `/usr/share/erlang/lib`), and the package owning the module that exports it
   becomes a requirement, e.g. `erlang-stdlib(x86-64)` (or plain
-  `erlang-stdlib` for noarch packages). Functions provided by the package
-  itself are skipped. Functions which can't be found anywhere are reported as
-  a warning, without failing the build.
+  `erlang-stdlib` for noarch packages and for BEAM files under
+  `/usr/share`). Functions provided by the package itself are skipped.
+  Functions which can't be found anywhere are reported as a warning, without
+  failing the build.
 * For a **NIF or driver library** (`priv/**/*.so` exporting `nif_init` or
   `driver_init`), the NIF or driver API version of the installed Erlang runtime
   becomes a requirement, e.g. `erlang(erl_nif_version) = 2.17`.

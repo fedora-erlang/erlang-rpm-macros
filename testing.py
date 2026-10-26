@@ -89,6 +89,30 @@ class TestAllMethods(unittest.TestCase):
             capture_output=True, text=True, check=True).stdout
         self.assertEqual(out.splitlines(), [";" + TEST_BEAM, 'erlang-erts', 'erlang-kernel', 'erlang-stdlib'])
 
+    def buildroot_beam(self, root, appdir):
+        # test.beam installed into a buildroot, as RPM passes it to us
+        ebin = os.path.join(root, appdir, "ebin")
+        os.makedirs(ebin)
+        beam = os.path.join(ebin, "test.beam")
+        with open(TEST_BEAM, "rb") as src, open(beam, "wb") as dst:
+            dst.write(src.read())
+        return beam
+
+    def test_beam_requires_share(self):
+        # A noarch package built with rpmbuild --target x86_64, or a noarch
+        # subpackage, still gets the ISA; BEAM files under /usr/share don't
+        # need it. The buildroot itself may contain anything, /usr/share too.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = os.path.join(tmp, "usr/share/BUILDROOT")
+            share = self.buildroot_beam(root, "usr/share/erlang/lib/foo-1.0")
+            lib = self.buildroot_beam(root, "usr/lib64/erlang/lib/bar-1.0")
+            env = dict(os.environ, RPM_BUILD_ROOT=root)
+            out = subprocess.run([sys.executable, SCRIPT, "-i", "(x86-64)"], input=share + "\n" + lib + "\n",
+                capture_output=True, text=True, check=True, env=env).stdout
+        self.assertEqual(out.splitlines(), [
+            ";" + share, 'erlang-erts', 'erlang-kernel', 'erlang-stdlib',
+            ";" + lib, 'erlang-erts(x86-64)', 'erlang-kernel(x86-64)', 'erlang-stdlib(x86-64)'])
+
     def test_rpm_version(self):
         self.assertEqual(P.rpm_version("1.2.3"), "1.2.3")
         self.assertEqual(P.rpm_version("1.0.0-rc.1"), "1.0.0~rc.1")
