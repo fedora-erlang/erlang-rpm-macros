@@ -91,6 +91,11 @@ def owners(filename):
 	return tuple((h[rpm.RPMTAG_NAME], h[rpm.RPMTAG_ARCH])
 		for h in transaction_set().dbMatch("basenames", filename))
 
+def installed_path(filename):
+	"""The path of a file once installed, without the buildroot RPM runs us in."""
+	root = os.environ.get("RPM_BUILD_ROOT", "").rstrip("/")
+	return filename[len(root):] if root and filename.startswith(root + "/") else filename
+
 def beam_requires(isa, libdirs, filename):
 	# The directory of the BEAM file could be:
 	# * '$BUILDROOT/usr/share/elixir/1.4.2/lib/mix/ebin'
@@ -110,11 +115,15 @@ def beam_requires(isa, libdirs, filename):
 			(m, f, a) = mfa
 			print(f"ERROR: Can't find {m}:{f}/{a} while processing '{filename}'", file=sys.stderr)
 
+	# isa is "noarch" when building a noarch package, but not always: it
+	# keeps the arch with rpmbuild --target <arch> (as mock does) and in
+	# noarch subpackages of arch packages. Files under /usr/share are
+	# arch-independent anyway.
+	noarch = isa == "noarch" or installed_path(filename).startswith("/usr/share/")
 	requires = set()
 	for beam in modules:
 		for (name, arch) in owners(beam):
-			# isa is "noarch" when building a noarch package
-			if isa == "noarch" or arch == "noarch":
+			if noarch or arch == "noarch":
 				requires.add(name)
 			else:
 				requires.add(f"{name}({isa})")
