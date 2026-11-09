@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2010-2026 Peter Lemenkov <lemenkov@gmail.com>
+SPDX-License-Identifier: MIT
+-->
+
 # erlang-rpm-macros
 
 RPM macros and an automatic dependency generator for packaging Erlang/OTP
